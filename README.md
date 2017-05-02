@@ -10,7 +10,7 @@ An overview of CyTrONE is provided below. Based on input from the training organ
 
 ![CyTrONE Overview](https://github.com/crond-jaist/cytrone/blob/master/cytrone_overview.png)
 
-Next we'll provide some brief information on the prerequisites for running CyTrONE, on how to setup, and on how to use CyTrONE. Please refer to the accompanying User Guide for details.
+Next we provide brief information on the prerequisites for running CyTrONE, on how to setup, and on how to use CyTrONE. Please refer to the accompanying User Guide for details.
 
 ## Prerequisites
 
