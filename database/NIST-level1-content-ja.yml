@@ -1,0 +1,100 @@
+---
+- training:
+  - id: L1-J1
+    description: デスクトップコンピュータのセキュリティ調査
+    header: |
+      <p>本日はシステム管理者として初めての仕事の日です。あなたの上司は、誰かがあなたの会社のネットワークに攻撃しようとしたことを疑っており、あなたにダニエル・グレイグと呼ばれる男が管理者だった頃に起こった可能性のあるサイバー攻撃を調査するよう頼みました。上司は前任のシステム管理者のコンピュータの前にあなたを座らせて、上手くいくことを望んでいます。</p>
+      <p>あなたはパソコンを見て、渋々仕事に取り掛かります。</p>
+    level: 1
+
+    questions:
+    - id: R-L1-001 
+      type: fill
+      content: オペレーティングシステムとカーネルリリース番号はコンピュータにどの脆弱性の可能性があるか伝えることができます。マシンのカーネルリリース番号を探してください。（例：3.4.5-6.7.8.abc.x86_64 ）
+      answer: 3.10.0-514.16.1.el7.x86_64
+      hints: 
+        - hint: あなたは<code>uname</code>コマンドを使ってOSの詳細を探すことができます。
+        - hint: <code>$ uname -r</code>
+        - hint: 別の方法として，<code>/proc/version</code>ファイルから必要な情報を探すことができます。
+
+    - id: R-L1-002
+      type: fill
+      content: あなたのコンピュータが接続しているネットワークを理解するために、そのパソコンについてもっと知る必要があります。1つ目のネットワークインターフェースに設定されたIPv4アドレスを探して、最後の2 バイト（逆マスク/16 のアドレス）を入力してください。（例：0.0.123.4 ）
+      answer: 0.0.1.2
+      hints:
+        - hint: あなたは、<code>ifconfig</code>コマンドによりNICの情報を探すことができます。
+        - hint: <code>$ ifconfig eth0</code>
+        - hint: 別のソリューションとして<code>ip</code>コマンドを使用する方法があります。<code>$ ip addr show dev eth0</code>
+
+    - id: R-L1-003
+      type: fill 
+      content: あなたは、この機械のルーティング設定についても知る必要があります。IPv4アドレスに対するデフォルトゲートウェイを探して、最後の2 バイト（逆マスク/16 のアドレス）を入力してください。（例：0.0.123.1 ）
+      answer: 0.0.1.1
+      hints:
+        - hint: <code>route</code>コマンドを使用してルーティング情報を得ることができます。
+        - hint: <code>$ route | grep default</code>
+        - hint: <code>netstat</code>コマンドを使うことでも可能です。<code>$ netstat -r | grep default</code>
+
+    - id: R-L1-004
+      type: fill
+      content: より詳しい調査は、どのアカウントがコンピュータ上に存在するか知る必要があります。前任のシステム管理者のユーザネームを探してください。
+      answer: daniel
+      hints:
+        - hint: 前任のシステム管理者の名前はすでにこのページに記載されています。<code>/home</code>ディレクトもヒントになります。
+        - hint: <code>/etc/passwd</code>ファイルはログイン関連の情報を保存するために使われます。
+        - hint: <code>$ grep -i Daniel /etc/passwd</code>
+
+    - id: R-L1-005
+      type: fill
+      content: ネットワークに対する侵入が疑われおり，あなたは関連するログファイルを確認する必要があります。前任のシステム管理者のアカウントを使用したログインの試行が2017年3月28日に何回発生したか調べてください。
+      answer: 54
+      hints:
+        - hint: ログインに失敗した試行は<i>authentication</i>イベントで見つかります。
+        - hint: CentOSでは認証イベントは<code>/var/log/secure</code>ファイルに記録されます。
+        - hint: <code>$ sudo grep "Failed password" /var/log/secure | grep daniel | grep -c "Mar 28"</code>
+
+    - id: R-L1-006
+      type: choice
+      content: あなたは，前管理者のアカウントのパスワードが弱すぎたためにハッキングを寄与したと考えています。彼のパスワードは何でしょうか？
+      choice: "\"JasonBourne\", \"GoldenEye\", \"JamesBond\", \"CasinoRoyale\""
+      answer: JamesBond
+      hints:
+        - hint: これは選択式の質問であるためどれかがパスワードです。
+        - hint: あなたは、コマンド<code>su</code> を用いて他のユーザに切り替えることができます。
+        - hint: <code>$ su daniel</code>
+
+    - id: R-L1-007
+      type: fill
+      content: あなたは、誰かが前任者の管理者アカウントをハッキングした可能性があると疑っています。あなたは、ハッカーがこのマシンのroot権限を取得しているか調査する必要があります。どのコマンドでrootとして実行をシステム管理者許可しましたか？
+      answer: ALL
+      hints:
+        - hint: <code>sudo</code>コマンドを用いてrootとして実行が可能です。
+        - hint: sudoの設定ファイルは<code>/etc/sudoers</code>です。
+        - hint: <code>$ sudo grep daniel /etc/sudoers</code>
+
+    - id: R-L1-008
+      type: fill
+      content: あなたは、侵入試行やシステム管理者のアカウントの弱点を上司に報告します。彼は，あなたを祝福し、継続して調査できるように追加の情報を提供します。<code>/home/traffic.pcap</code> はパスワード推測攻撃による通信をキャプチャーした情報を含んでいるファイルです。攻撃元の国はどこですか？
+      answer: Russian Federation
+      hints:
+        - hint: <b>Wireshark</b>（又はコマンドラインの<b>tshark</b>もしくは<b>tcpdump</b>）と呼ばれるツールを通信を調査するために使用してください。例：<code>$ tshark -r /home/traffic.pcap -p ssh</code>
+        - hint: SSHへのログイン試行に使用されたIPアドレスを関連の国を特定するために使います。
+        - hint: <code>$ geoiplookup IP_ADDRESS</code>
+
+    - id: R-L1-009
+      type: fill
+      content: あなたは、攻撃者がマシンに接続することをまだ心配しています。IPv4インターフェースで開いている全てのポートを探してください。</p>
+      answer: 22
+      hints:
+        - hint: あなたは、<code>netstat</code>コマンドを使用してネットワーク状況を調査することができます。
+        - hint: <code>$ netstat -atun | grep LISTEN</code>
+        - hint: 他の方法としては、<code>lsof</code>コマンドを使用することができます。<code>$sudo lsof | grep LISTEN</code>
+
+    - id: R-L1-010
+      type: fill
+      content: あなたのマシン上でマルウェアが動作してかもしれないと疑っています。マルウェアの名前を見つけてください。
+      answer: DAEMON
+      hints:
+        - hint: 正しいプロセスと不正なプロセスを区別する基本的な方法は，プロセス名を確認することです。
+        - hint: <code>ps</code>コマンドを使って、全ての実行中のプロセスを表示できます。例：<code>$ ps -ef</code>
+        - hint: <code>top</code>コマンドで最もCPU 使用率の高いプロセスを確認できます。

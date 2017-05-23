@@ -1,0 +1,5 @@
+[config]
+copy = 1
+source = /home/cyuser/cytrone/code/tmp_content_description-1.yml
+package_name = /home/cyuser/cytrone/code/tmp_training_content-1.zip
+destination = /var/www/moodledata/repository/training_content/training_content1.zip

@@ -1,0 +1,4 @@
+[config]
+copy = 1
+package_name = /home/cyuser/moodle/settings/default_content.zip
+destination = /var/www/moodledata/repository/training_content/training_content5.zip

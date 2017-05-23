@@ -1,0 +1,53 @@
+---
+- host_settings:
+  - id: host_1
+    mgmt_addr: {{ host_mgmt_addr }}
+    virbr_addr: {{ host_virbr_addr }}
+    account: {{ host_account }}
+
+- guest_settings:
+  - id: desktop
+    basevm_host: host_1
+    basevm_config_file: /home/cyuser/images/basevm_desktop.xml
+    basevm_type: kvm
+    tasks:
+    - add_account:
+      - account: daniel
+        passwd: JamesBond
+
+    - install_package:
+      - package_manager: yum
+        name: wireshark
+
+    - emulate_attack:
+      - attack_type: ssh_attack
+        target_account: daniel
+        attempt_number: 54
+        attack_time: 20170328
+
+    - emulate_traffic_capture_file:
+      - format: pcap
+        file_name: /home/traffic.pcap
+        attack_type: ssh_attack
+        attack_source: 2.95.120.235
+        noise_level: medium
+
+    - emulate_malware:
+      - name: DAEMON
+        cpu_utilization: 40
+        mode: dummy_calculation
+
+- clone_settings:
+  - range_id: {{ clone_range_id }}
+    hosts:
+    - host_id: host_1
+      instance_number: {{ clone_instance_number }}
+      guests:
+      - guest_id: desktop
+        number: 1
+        entry_point: yes
+      topology:
+      - type: custom
+        networks:
+        - name: office
+          members: desktop.eth0
