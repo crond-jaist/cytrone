@@ -1,0 +1,27 @@
+---
+# Description of the types of training available in the database
+- types:
+  - name: Scenario-Based Training
+    category: scenarios
+  - name: Topic-Based Training [N/A]
+    category: topics
+
+# Description of the scenarios available in the training database
+- scenarios:
+
+  # Scenario based on the US National Institute of Standards and Technology
+  # (NIST) Guide on Information Security Testing and Assessment
+  - name: Information Security Testing and Assessment
+    levels:
+      - name: Level 1 (Easy)
+        content: NIST-level1-content-en.yml
+        specification: NIST-level1-range.yml
+      - name: Level 2 (Medium) [N/A]
+      - name: Level 3 (Hard) [N/A]
+
+  # Scenario based on general guidelines for incident response
+  - name: Incident Detection and Response [N/A]
+    levels:
+      - name: Level 1 (Detection) [N/A]
+      - name: Level 2 (Forensics) [N/A]
+      - name: Level 3 (Response) [N/A]

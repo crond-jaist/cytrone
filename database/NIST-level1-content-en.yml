@@ -1,0 +1,100 @@
+---
+- training:
+  - id: L1-E1
+    description: Investigate the security of a desktop computer
+    header: |
+      <p>Today is your first day on the job as a sysadmin. Your boss tells you that he suspects somebody tried to hack into your company's network, and asks you to investigate a possible cyber attack that may have happened when the system administrator was a guy called Daniel Craig. The boss sits you in front of the previous sysadmin's computer, and wishes you good luck.</p>
+      <p>You glance at the machine and reluctantly get to work.<p>
+    level: 1
+
+    questions:
+    - id: R-L1-001
+      type: fill
+      content: The operating system and kernel release number can tell you about the possible vulnerabilities of a computer. Find out the full kernel release number of the machine (e.g., 3.4.5-6.7.8.abc.x86_64).
+      answer: 3.10.0-514.16.1.el7.x86_64
+      hints:
+        - hint: You can use the command <code>uname</code> to find out OS details.
+        - hint: $ uname -r
+        - hint: An alternative solution is to get the required information from the <code>/proc/version</code> file.
+
+    - id: R-L1-002
+      type: fill
+      content: In order to understand the network your computer is connected to, you should know more about the machine. Find out the IPv4 address of its first network interface, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g, 0.0.123.234).
+      answer: 0.0.1.2
+      hints:
+        - hint: You can use the command <code>ifconfig</code> to find out NIC information.
+        - hint: <code>$ ifconfig eth0</code>
+        - hint: "An alternative solution is to use the <code>ip</code> command: <code>$ ip addr show dev eth0</code>"
+
+    - id: R-L1-003
+      type: fill
+      content: You also need to know about the routing settings of the machine. Find out the IPv4 address of the default gateway, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g, 0.0.123.1).
+      answer: 0.0.1.1
+      hints:
+        - hint: You can use the command <code>route</code> to obtain routing information.
+        - hint: <code>$ route -n | grep ^0.0.0.0</code>
+        - hint: "It is also possible to use the <code>netstat</code> command: <code>$ netstat -rn | grep ^0.0.0.0</code>"
+
+    - id: R-L1-004
+      type: fill
+      content: Investigating deeper requires you to know what accounts exist on the computer. Find out the user name of the previous system administrator.
+      answer: daniel
+      hints:
+        - hint: The name of the previous sysadmin was already mentioned on this page. The <code>/home</code> directory could also provide some hints.
+        - hint: The <code>/etc/passwd</code> file is used to store login-related information.
+        - hint: <code>$ grep -i Daniel /etc/passwd</code>
+
+    - id: R-L1-005
+      type: fill
+      content: A network intrusion is suspected, so you should check the relevant log file. Find out how many unsuccessful login attempts using the account of the previous sysadmin have occurred on March 28th, 2017.
+      answer: 54
+      hints:
+        - hint: Unsuccessful login attempts are specific kind of <i>authentication</i> events.
+        - hint: In CentOS authentication events are logged in the file <code>/var/log/secure</code>.
+        - hint: <code>$ sudo grep "Failed password" /var/log/secure | grep daniel | grep -c "Mar 28"</code>
+
+    - id: R-L1-006
+      type: choice
+      content: You believe that the previous administrator's account password is too weak, which may have contributed to the hacking. What is his password?
+      choice: "\"JasonBourne\", \"GoldenEye\", \"JamesBond\", \"CasinoRoyale\""
+      answer: JamesBond
+      hints:
+        - hint: This is a multiple-choice question, so one of the answers must be the password.
+        - hint: You can use the command <code>su</code> to switch to another user.
+        - hint: <code>$ su daniel</code>
+
+    - id: R-L1-007
+      type: fill
+      content: You suspect that someone may have hacked the previous administrator's account. You need to verify whether this would have allowed hackers to have root privileges on this machine. What commands was the sysadmin allowed to execute as root?
+      answer: ALL
+      hints:
+        - hint: One can execute commands as root by using the command <code>sudo</code>.
+        - hint: The configuration file for sudo is <code>/etc/sudoers</code>.
+        - hint: <code>$ sudo grep daniel /etc/sudoers</code>
+
+    - id: R-L1-008
+      type: fill
+      content: You report the attempted intrusion and the sysadmin account weaknesses to your boss. He congratulates you and provides you with more data so that you can continue your investigation. The file <code>/home/traffic.pcap</code> contains the traffic capture related to a password guessing attack. In which country did the attack originate?
+      answer: Russian Federation
+      hints:
+        - hint: "You can use the tool called <b>Wireshark</b> (or the terminal-based <b>tshark</b> or <b>tcpdump</b> commands) to investigate traffic capture files. For example: <code>$ tshark -r /home/traffic.pcap -p ssh</code>"
+        - hint: Use the IP address identified as source of the SSH login attempts to identify the country associated to it.
+        - hint: <code>$ geoiplookup IP_ADDRESS</code>
+
+    - id: R-L1-009
+      type: fill
+      content: You are worried that hackers may still be connected to the machine. Find out what ports are open for all the IPv4 interfaces.
+      answer: 22
+      hints:
+        - hint: You can use the command <code>netstat</code> to investigate network status.
+        - hint: <code>$ netstat -atun | grep LISTEN</code>
+        - hint: "An alternative is to use the <code>lsof</code> command: <code>$sudo lsof | grep LISTEN</code>"
+
+    - id: R-L1-010
+      type: fill
+      content: You suspect that malware may be running on your machine. Find out the name of the malware.
+      answer: DAEMON
+      hints:
+        - hint: A basic way to differentiate between legit processes and rogue ones is to look at process names.
+        - hint: "The command <code>ps</code> can be used to display all the running processes on a computer. For example: <code>$ ps -ef</code>"
+        - hint: You can use the command <code>top</code> to view the processes with highest CPU utilization.

@@ -1,0 +1,17 @@
+---
+# Information about the users who can access the training system
+- users:
+
+  # Professor John Doe
+  - name: John Doe
+    id: john_doe
+    host_mgmt_addr: 172.16.1.7
+    host_virbr_addr: 192.168.122.1
+    host_account: cyuser
+
+  # Student Jane Roe
+  - name: Jane Roe
+    id: jane_roe
+    host_mgmt_addr: 172.16.1.3
+    host_virbr_addr: 192.168.122.1
+    host_account: cyuser
