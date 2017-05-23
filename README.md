@@ -12,9 +12,9 @@ training organizer and a training database, CyTrONE uploads the
 training content to a Learning Management System (LMS) via the helper
 tool called **cnt2lms**, and also creates the associated training
 environment via the cyber range instantiation system called **CyRIS**,
-both developed by CROND as well. Trainees can then access the LMS to consult
-the training content, connect to the cyber range to conduct the
-necessary investigation, and then provide the answers via the LMS.
+both developed by CROND as well. Trainees can then access the LMS to
+consult the training content, connect to the cyber range to conduct
+the necessary investigation, and then provide the answers via the LMS.
 
 ![CyTrONE Overview](https://github.com/crond-jaist/cytrone/blob/master/cytrone_overview.png)
 
@@ -26,15 +26,15 @@ the accompanying User Guide for details.
 ## Prerequisites
 
 The following steps must be carried out _before_ using CyTrONE:
-* Install the **Moodle** LMS on the host used as training content server;
-  please refer to the relevant documentation for
+* Install the **Moodle** LMS on the host used as training content
+  server; please refer to the relevant documentation for
   details. https://moodle.org/
-* Install the **cnt2lms** training content to LMS converter on the same host
-  where Moodle is installed; please refer to the cnt2lms User Guide
-  for details. https://github.com/crond-jaist/cnt2lms/
-* Install the **CyRIS** cyber range instantiation system on the hosts used for
-  cyber range creation; please refer to the CyRIS User Guide for
-  details. https://github.com/crond-jaist/cyris/
+* Install the **cnt2lms** training content to LMS converter on the
+  same host where Moodle is installed; please refer to the cnt2lms
+  User Guide for details. https://github.com/crond-jaist/cnt2lms/
+* Install the **CyRIS** cyber range instantiation system on the hosts
+  used for cyber range creation; please refer to the CyRIS User Guide
+  for details. https://github.com/crond-jaist/cyris/
 
 
 ## Setup
@@ -68,16 +68,17 @@ We provide next the basic steps necessary for using CyTrONE:
 
    $ ./start_cytrone.sh
 
-2. Create a new training session by running the command below and 
-selecting one of the pre-configured menu choices displayed (these 
+2. Create a new training session by running the command below and
+selecting one of the pre-configured menu choices displayed (these
 choices can be customized by modifying the script itself).
 
    $ ./create_training.sh
 
-3. Information about how to access the created cyber range will be 
-displayed (and trainees must be provided with the details regarding 
-the instance allocated to each of them). Verify that the cyber range 
-is accessible and that training content is displayed in the Moodle LMS.
+3. Information about how to access the created cyber range will be
+displayed (and trainees must be provided with the details regarding
+the instance allocated to each of them). Verify that the cyber range
+is accessible and that training content is displayed in the Moodle
+LMS.
 
 4. End the training session (assuming the session id is 1).
 
