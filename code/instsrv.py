@@ -46,7 +46,8 @@ CYRIS_RANGE_DIRECTORY = "cyber_range/" # TODO: This should also be provided as a
 CYRIS_STATUS_FILENAME = "cr_creation_status"
 CYRIS_NOTIFICATION_TEMPLATE = "range_notification-cr{0}.txt"
 CYRIS_NOTIFICATION_SIMULATED = "range_notification-simulated.txt"
-CYRIS_DESTRUCTION_SCRIPT = "whole-controlled-destruction.sh"
+#CYRIS_DESTRUCTION_SCRIPT = "whole-controlled-destruction.sh"
+CYRIS_DESTRUCTION_SCRIPT = "main/range_cleanup.py"
 CYRIS_CONFIG_FILENAME = "CONFIG"
 SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed interval
 
@@ -54,11 +55,11 @@ SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed 
 DEBUG = False
 USE_CYRIS = True
 
-# Temporary
+# Temporary solution until better way is implemented
 USE_CNT2LMS_SCRIPT_GENERATION = False
-#CYRIS_MASTER_HOST = "172.16.1.7"
-#CYRIS_MASTER_ACCOUNT = "cyuser"
-#CNT2LMS_PATH = "/home/cyuser/moodle/cnt2lms/"
+CYRIS_MASTER_HOST = "172.16.1.7"
+CYRIS_MASTER_ACCOUNT = "cyuser"
+CNT2LMS_PATH = "/home/cyuser/moodle/cnt2lms/"
 
 
 #############################################################################
@@ -174,6 +175,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     return_value = os.system(command)
                     exit_status = os.WEXITSTATUS(return_value)
                     if exit_status != 0:
+                        self.handle_cyris_error(range_id)
                         self.send_error(SERVER_ERROR, "CyRIS execution issue")
                         return
 
@@ -199,38 +201,40 @@ class RequestHandler(BaseHTTPRequestHandler):
                                 message = urllib.quote(notification_file_content)
                                 
                             response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+
+                            # We try to prepare the terminal for Moodle, but
+                            # errors are only considered as warnings for the
+                            # moment, since this functionality is not publicly
+                            # released yet in cnt2lms
+                            try:
+                                if USE_CNT2LMS_SCRIPT_GENERATION:
+                                    ssh_command = "ssh -tt -o 'ProxyCommand ssh crond@172.16.1.3 -W %h:%p' crond@moodle"
+                                    python_command = "python -u " + CNT2LMS_PATH + "get_cyris_result.py " + CYRIS_MASTER_HOST + " " + CYRIS_MASTER_ACCOUNT + " " + CYRIS_PATH + CYRIS_RANGE_DIRECTORY + " " + range_id + " 1"
+                                    command = ssh_command + " \"" + python_command + "\""
+                                    print "* DEBUG: instsrv: get_cyris_result command: " + command
+                                    return_value = os.system(command)
+                                    exit_status = os.WEXITSTATUS(return_value)
+                                    if exit_status == 0:
+                                        #response_content = RESPONSE_SUCCESS
+                                        pass
+                                    else:
+                                        #self.send_error(SERVER_ERROR, "LMS terminal preparation issue")
+                                        #return
+                                        print "* DEBUG: instsrv: LMS terminal preparation issue"
+                            except IOError:
+                                #self.send_error(SERVER_ERROR, "LMS terminal preparation I/O error)
+                                #return
+                                print "* DEBUG: instsrv: LMS terminal preparation I/O error"
                         else:
-                            # CyRIS is now destroying automatically the cyber range
-                            # in case of error, so we just return the error status
+                            # Even though CyRIS is now destroying automatically the cyber range
+                            # in case of error, as it may fail we still try to clean up here
+                            self.handle_cyris_error(range_id)
                             response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
                                                                    Storyboard.INSTANTIATION_STATUS_FILE_NOT_FOUND)
                 except IOError:
+                    self.handle_cyris_error(range_id)
                     self.send_error(SERVER_ERROR, Storyboard.INSTANTIATION_CYRIS_IO_ERROR)
                     return
-
-                # We try to prepare the terminal for Moodle, but
-                # errors are only considered as warning for the
-                # moment, since this functionality is not publicly
-                # released yet in cnt2lms
-                try:
-                    if USE_CNT2LMS_SCRIPT_GENERATION:
-                        ssh_command = "ssh -tt -o 'ProxyCommand ssh cyuser@172.16.1.3 -W %h:%p' cyuser@moodle"
-                        python_command = "python -u " + CNT2LMS_PATH + "get_cyris_result.py " + CYRIS_MASTER_HOST + " " + CYRIS_MASTER_ACCOUNT + " " + CYRIS_PATH + CYRIS_RANGE_DIRECTORY
-                        command = ssh_command + " \"" + python_command + "\""
-                        print "* DEBUG: instsrv: get_cyris_result command: " + command
-                        return_value = os.system(command)
-                        exit_status = os.WEXITSTATUS(return_value)
-                        if exit_status == 0:
-                            #response_content = RESPONSE_SUCCESS
-                            pass
-                        else:
-                            #self.send_error(SERVER_ERROR, "LMS terminal preparation issue")
-                            #return
-                            print "* DEBUG: instsrv: LMS terminal preparation issue"
-                except IOError:
-                    #self.send_error(SERVER_ERROR, "LMS terminal preparation I/O error)
-                    #return
-                    print "* DEBUG: instsrv: LMS terminal preparation I/O error"
 
             # Don't use CyRIS, just simulate the instantiation
             else:
@@ -271,14 +275,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             
             # Use CyRIS to really do cyber range destruction
             if USE_CYRIS:
-                destruction_filename = CYRIS_PATH + CYRIS_RANGE_DIRECTORY + str(range_id) + "/" + CYRIS_DESTRUCTION_SCRIPT
-                if os.path.exists(destruction_filename):
-                    os.system(destruction_filename)
+                destruction_filename = CYRIS_PATH + CYRIS_DESTRUCTION_SCRIPT
+                destruction_command = "{0} {1} {2}".format(destruction_filename, range_id, CYRIS_PATH + CYRIS_CONFIG_FILENAME)
+                print "* DEBUG: instrv: destruction_command: " + destruction_command
+                return_value = os.system(destruction_command)
+                exit_status = os.WEXITSTATUS(return_value)
+                if exit_status == 0:
                     response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS)
                 else:
                     response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
-                                                           Storyboard.DESTRUCTION_SCRIPT_NOT_FOUND)
-
+                                                           "CyRIS destruction issue")
                 
             # Don't use CyRIS, just simulate the destruction
             else:
@@ -327,7 +333,17 @@ class RequestHandler(BaseHTTPRequestHandler):
             response_body = '[{' + response_status + '}]'
 
         return response_body
-    
+
+    def handle_cyris_error(self, range_id):
+        print "* INFO: Error occurred in CyRIS => perform cyber range cleanup."
+        destruction_filename = CYRIS_PATH + CYRIS_DESTRUCTION_SCRIPT
+        destruction_command = "{0} {1} {2}".format(destruction_filename, range_id, CYRIS_PATH + CYRIS_CONFIG_FILENAME)
+        print "* DEBUG: instrv: destruction_command: " + destruction_command
+        return_value = os.system(destruction_command)
+        exit_status = os.WEXITSTATUS(return_value)
+        if exit_status != 0:
+            print "* ERROR: instrv: Range cleanup failed."
+
 # Print usage information
 def usage():
     print "OVERVIEW: CyTrONE instantiation server that manages the CyRIS cyber range instantiation system.\n"
