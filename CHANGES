@@ -1,0 +1,13 @@
+
+CyTrONE v0.2
+------------
+* Updated sample training content files according to modifications
+  that occured in cnt2lms
+* Updated sample cyber range description according to modifications
+  that occured in CyRIS
+* Improved instantiation server by taking into account new
+  functionality in CyRIS, such as the range_cleanup.py script
+
+CyTrONE v0.1
+------------
+* First public release
