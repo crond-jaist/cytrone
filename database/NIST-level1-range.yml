@@ -8,12 +8,13 @@
 - guest_settings:
   - id: desktop
     basevm_host: host_1
-    basevm_config_file: /home/cyuser/images/basevm_desktop.xml
+    basevm_config_file: /home/cyuser/images/basevm_small.xml
     basevm_type: kvm
     tasks:
     - add_account:
       - account: daniel
         passwd: JamesBond
+        full_name: Daniel Craig
 
     - install_package:
       - package_manager: yum
