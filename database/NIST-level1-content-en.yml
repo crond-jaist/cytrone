@@ -3,7 +3,7 @@
   - id: L1-EN
     title: Investigate the security of a desktop computer
     overview: |
-      <p>Today is your first day on the job as a sysadmin. Your boss tells you that he suspects somebody tried to hack into your company's network, and asks you to investigate a possible cyber attack that may have happened when the system administrator was a guy called Daniel Craig. The boss sits you in front of the previous sysadmin's computer, and wishes you good luck.</p>
+      <p>Today is your first day on the job as a sysadmin. Your boss tells you that he suspects somebody tried to hack into your company's network, and asks you to investigate a possible cyberattack that may have happened when the system administrator was a guy called Daniel Craig. The boss sits you in front of the previous sysadmin's computer, and wishes you good luck.</p>
       <p>You glance at the machine and reluctantly get to work.<p>
     level: 1
 
@@ -17,7 +17,7 @@
         - An alternative solution is to get the required information from the <code>/proc/version</code> file.
 
     - id: L1-EN-002
-      body: In order to understand the network your computer is connected to, you should know more about the machine. Find out the IPv4 address of its first network interface, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g, 0.0.123.234).
+      body: In order to understand the network your computer is connected to, you should know more about the machine. Find out the IPv4 address of its first network interface, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g., 0.0.123.234).
       answer: 0.0.1.2
       hints:
         - You can use the command <code>ifconfig</code> to find out NIC information.
@@ -25,7 +25,7 @@
         - "An alternative solution is to use the <code>ip</code> command: <code>$ ip addr show dev eth0</code>"
 
     - id: L1-EN-003
-      body: You also need to know about the routing settings of the machine. Find out the IPv4 address of the default gateway, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g, 0.0.123.1).
+      body: You also need to know about the routing settings of the machine. Find out the IPv4 address of the default gateway, and enter the <i>last 2 bytes</i> (inverse netmask /16 address) below (e.g., 0.0.123.1).
       answer: 0.0.1.1
       hints:
         - You can use the command <code>route</code> to obtain routing information.
