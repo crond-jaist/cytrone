@@ -1,5 +1,6 @@
 [config]
-copy = 1
-source = /home/cyuser/cytrone/code/tmp_content_description-2.yml
+enable_copy = yes
+input_file = /home/cyuser/cytrone/code/tmp_content_description-2.yml
 package_name = /home/cyuser/cytrone/code/tmp_training_content-2.zip
+remote_lms = moodle
 destination = /var/www/moodledata/repository/training_content/training_content2.zip
