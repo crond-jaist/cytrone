@@ -10,7 +10,7 @@
     questions:
     - id: L1-EN-001
       body: The operating system and kernel release number can tell you about the possible vulnerabilities of a computer. Find out the full kernel release number of the machine (e.g., 3.4.5-6.7.8.abc.x86_64).
-      answer: 3.10.0-514.21.1.el7.x86_64
+      answer: 3.10.0-693.17.1.el7.x86_64
       hints:
         - You can use the command <code>uname</code> to find out OS details.
         - $ uname -r
@@ -50,7 +50,7 @@
 
     - id: L1-EN-006
       body: You believe that the previous administrator's account password is too weak, which may have contributed to the hacking. What is his password?
-      choices: "\"JasonBourne\", \"GoldenEye\", \"JamesBond\", \"CasinoRoyale\""
+      choices: JasonBourne, GoldenEye, JamesBond, CasinoRoyale
       answer: JamesBond
       hints:
         - This is a multiple-choice question, so one of the answers must be the password.

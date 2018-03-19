@@ -10,7 +10,7 @@
     questions:
     - id: L1-JA-001
       body: オペレーティングシステムとカーネルリリース番号はコンピュータにどの脆弱性の可能性があるか伝えることができます。マシンのカーネルリリース番号を探してください。（例：3.4.5-6.7.8.abc.x86_64 ）
-      answer: 3.10.0-514.21.1.el7.x86_64
+      answer: 3.10.0-693.17.1.el7.x86_64
       hints:
         - あなたは<code>uname</code>コマンドを使ってOSの詳細を探すことができます。
         - <code>$ uname -r</code>
@@ -50,7 +50,7 @@
 
     - id: L1-JA-006
       body: あなたは，前管理者のアカウントのパスワードが弱すぎたためにハッキングを寄与したと考えています。彼のパスワードは何でしょうか？
-      choices: "\"JasonBourne\", \"GoldenEye\", \"JamesBond\", \"CasinoRoyale\""
+      choices: JasonBourne, GoldenEye, JamesBond, CasinoRoyale
       answer: JamesBond
       hints:
         - これは選択式の質問であるためどれかがパスワードです。
