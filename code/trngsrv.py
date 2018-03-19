@@ -25,7 +25,7 @@ from storyboard import Storyboard
 # Constants
 #############################################################################
 
-CYTRONE_VERSION = "0.1"
+CYTRONE_VERSION = "1.0"
 
 # Web server constants
 LOCAL_ADDRESS = "127.0.0.1"
