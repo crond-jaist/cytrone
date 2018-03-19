@@ -6,6 +6,7 @@
 
 #External imports
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import ssl
 import urllib
 import time
 import random
@@ -20,6 +21,7 @@ import trnginfo
 import sessinfo
 import query
 from storyboard import Storyboard
+from password import Password
 
 #############################################################################
 # Constants
@@ -40,6 +42,8 @@ INSTANTIATION_SERVER_URL = "http://127.0.0.1:8083"
 MAX_SESSIONS = 5
 INVALID_SESSION_ID = -1
 ENABLE_THREADS = True
+ENABLE_HTTPS = False
+ENABLE_PASSWORD = False
 
 # Names of files containing training-related information
 USERS_FILE  = "users.yml"
@@ -153,10 +157,14 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         print ""
         print SEPARATO2
-        print "* INFO: trngsrv: Request POST parameters: %s" % (params)
+        if ENABLE_PASSWORD:
+            print("* INFO: trngsrv: Request POST parameters: [not shown because password use is enabled]")
+        else:
+            print("* INFO: trngsrv: Request POST parameters: {}".format(params))
 
         # Get the values of the parameters for given keys
         user_id = params.get(query.Parameters.USER)
+        password = params.get(query.Parameters.PASSWORD)
         action = params.get(query.Parameters.ACTION)
         language = params.get(query.Parameters.LANG) 
         instance_count = params.get(query.Parameters.COUNT)
@@ -170,6 +178,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "POST PARAMETERS:"
             print SEPARATOR
             print "USER: %s" % (user_id)
+            if password:
+                print "PASSWORD: ******"
             print "ACTION: %s" % (action)
             print "LANGUAGE: %s" % (language)
             print "COUNT: %s" % (instance_count)
@@ -199,6 +209,21 @@ class RequestHandler(BaseHTTPRequestHandler):
         if not user_obj:
             self.respond_error(Storyboard.USER_ID_INVALID_ERROR)
             return
+
+        # Check password (if enabled)
+        if ENABLE_PASSWORD:
+            # Check whether password exists in database for current user
+            if not user_obj.password:
+                self.respond_error(Storyboard.USER_PASSWORD_NOT_IN_DATABASE_ERROR)
+                return
+            # If a password was provided, verify that it matches the encrypted one from the database
+            if password:
+                if not Password.verify(password, user_obj.password):
+                    self.respond_error(Storyboard.USER_ID_PASSWORD_INVALID_ERROR)
+                    return
+            else:
+                self.respond_error(Storyboard.USER_PASSWORD_MISSING_ERROR)
+                return
 
         ## Verify action information
 
@@ -756,7 +781,16 @@ def main(argv):
             multi_threading = " (multi-threading mode)"
         else:
             server = HTTPServer((server_address, server_port), RequestHandler)
-            
+
+        # Use SSL socket if HTTPS is enabled
+        if ENABLE_HTTPS:
+            print("* INFO: trngsrv: HTTPS is enabled => set up SSL socket")
+            server.socket = ssl.wrap_socket (server.socket,
+                                             keyfile="crond-gw.jaist.ac.jp.key",
+                                             certfile="crond-gw.jaist.ac.jp.cer",
+                                             ca_certs="nii-odca3sha1.cer",
+                                             server_side=True)
+
         # Start web server
         print "* INFO: trngsrv: CyTrONE training server started on %s:%d%s." % (
             server_address, server_port, multi_threading)

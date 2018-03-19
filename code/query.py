@@ -30,6 +30,7 @@ class Parameters:
     ## Constants defining keys and values
     # User information
     USER = "user"
+    PASSWORD = "password"
 
     # Action specification
     ACTION = "action"
@@ -94,6 +95,7 @@ class Parameters:
         # must use lists in order to mimic the output of parse_qs()
         default_values = {
             self.USER: None,
+            self.PASSWORD: None,
             self.ACTION: None,
             self.LANG: [self.EN],
             self.TYPE: None,

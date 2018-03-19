@@ -7,7 +7,7 @@
 # External imports
 import sys
 import urllib
-
+import ssl
 import logging
 #logging.basicConfig(level=logging.DEBUG, format='* %(levelname)s: %(filename)s: %(message)s')
 logging.basicConfig(level=logging.INFO, format='* %(levelname)s: %(filename)s: %(message)s')
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='* %(levelname)s: %(filename)s: %
 import sessinfo
 import trnginfo
 import query
-
+from storyboard import Storyboard
 
 #############################################################################
 # Constants
@@ -24,6 +24,10 @@ import query
 
 # Various constants
 SEPARATOR = "----------------------------------------------------------------"
+HTTP_PREFIX="http://"
+HTTPS_PREFIX="https://"
+ENABLE_HTTPS = False
+ENABLE_PASSWORD = False
 
 # Debugging constants
 DATABASE_DIR = "../database/"
@@ -46,8 +50,15 @@ try:
         POST_parameters = sys.argv[2]
     else:
         logging.error("Not enough arguments were provided")
-        logging.info("Syntax: python trngcli.py SRV_ADDR:SRV_PORT POST_PARAMS")
+        logging.info("Syntax: trngcli.py SRV_ADDR:SRV_PORT POST_PARAMS")
         quit(-1)
+
+    # If no http-like prefix exists, add the appropriate one
+    if not (server_url.startswith(HTTP_PREFIX) or server_url.startswith(HTTPS_PREFIX)):
+        if ENABLE_HTTPS:
+            server_url = HTTPS_PREFIX + server_url
+        else:
+            server_url = HTTP_PREFIX + server_url
 
     logging.info("CyTrONE training client connecting to {0}...".format(server_url))
 
@@ -71,11 +82,24 @@ try:
             logging.error("Cannot read from file {0}.".format(SAMPLE_INSTANTIATE_RANGE))
 
     # Connect to server with the given POST parameters
-    logging.info("Client POST parameters: "+ POST_parameters)
-    if POST_parameters != None:
-        data_stream = urllib.urlopen(server_url, POST_parameters)
+    if ENABLE_PASSWORD:
+        logging.info("Client POST parameters: [not shown because password use is enabled]")
     else:
-        data_stream = urllib.urlopen(server_url)
+        logging.info("Client POST parameters: "+ POST_parameters)
+    if POST_parameters:
+        if ENABLE_HTTPS:
+            logging.info("HTTPS is enabled => set up SSL connection (currently w/o checking!)")
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            #ssl_context.load_verify_locations("/home/crond/cytrone/code/nii-odca3sha1.cer")
+            data_stream = urllib.urlopen(server_url, POST_parameters, context=ssl_context)
+        else:
+            data_stream = urllib.urlopen(server_url, POST_parameters)
+    else:
+        logging.error("No POST parameters provided => abort")
+        quit(-1)
+
     data = data_stream.read()
 
     # Show server response
@@ -88,16 +112,22 @@ try:
     if action == query.Parameters.FETCH_CONTENT:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
-        # Parse the training information into a TrainingInfo object
-        training_info = trnginfo.TrainingInfo()
-        if training_info.parse_JSON_data(data):
-            logging.info("Showing retrieved training content information...")
-            training_info.pretty_print()
+        if status == Storyboard.SERVER_STATUS_SUCCESS:
+            # Parse the training information into a TrainingInfo object
+            training_info = trnginfo.TrainingInfo()
+            if training_info.parse_JSON_data(data):
+                logging.info("Showing retrieved training content information...")
+                training_info.pretty_print()
+        else:
+            logging.error("Showing returned error message...")
+            print SEPARATOR
+            print message
+            print SEPARATOR
             
     elif action == query.Parameters.CREATE_TRAINING:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing training session creation information... ")
             print SEPARATOR
@@ -108,25 +138,37 @@ try:
     elif action == query.Parameters.GET_CONFIGURATIONS:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
-        # Parse the configuration information into a SessionInfo object
-        session_info = sessinfo.SessionInfo()
-        if session_info.parse_JSON_data(data):
-            logging.info("Showing retrieved saved configuration information...")
-            session_info.pretty_print()
+        if status == Storyboard.SERVER_STATUS_SUCCESS:
+            # Parse the configuration information into a SessionInfo object
+            session_info = sessinfo.SessionInfo()
+            if session_info.parse_JSON_data(data):
+                logging.info("Showing retrieved saved configuration information...")
+                session_info.pretty_print()
+        else:
+            logging.error("Showing returned error message...")
+            print SEPARATOR
+            print message
+            print SEPARATOR
  
     elif action == query.Parameters.GET_SESSIONS:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
-        # Parse the session information into a SessionInfo object
-        session_info = sessinfo.SessionInfo()
-        if session_info.parse_JSON_data(data):
-            logging.info("Showing retrieved active session information...")
-            session_info.pretty_print()
+        if status == Storyboard.SERVER_STATUS_SUCCESS:
+            # Parse the session information into a SessionInfo object
+            session_info = sessinfo.SessionInfo()
+            if session_info.parse_JSON_data(data):
+                logging.info("Showing retrieved active session information...")
+                session_info.pretty_print()
+        else:
+            logging.error("Showing returned error message...")
+            print SEPARATOR
+            print message
+            print SEPARATOR
 
     elif action == query.Parameters.END_TRAINING:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing training session termination information... ")
             print SEPARATOR
@@ -138,7 +180,7 @@ try:
     elif action == query.Parameters.INSTANTIATE_RANGE:        
         logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing cyber range instantiation information... ")
             print SEPARATOR
@@ -148,7 +190,7 @@ try:
     elif action == query.Parameters.DESTROY_RANGE:        
         logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing cyber range destruction information... ")
             print SEPARATOR
@@ -159,7 +201,7 @@ try:
     elif action == query.Parameters.UPLOAD_CONTENT:        
         logging.info("Content server action '{0}' done => {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing LMS content upload information... ")
             print SEPARATOR
@@ -169,7 +211,7 @@ try:
     elif action == query.Parameters.RESET_CONTENT:        
         logging.info("Content server action '{0}' done Status: {1}.".format(action, status))
 
-        # Display message if any
+        # Display message if any (including in case of error)
         if message:
             logging.info("Showing LMS content reset information... ")
             print SEPARATOR
@@ -181,7 +223,7 @@ try:
         logging.error("Unrecognized action: {0}.".format(action))
         
 except IOError as error:
-    logging.error("{0}.".format(error))
+    logging.error("I/O Error: {0}.".format(error))
 
 except ValueError as error:
-    logging.error("{0}.".format(error))
+    logging.error("Value Error: {0}.".format(error))

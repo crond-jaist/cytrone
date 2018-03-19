@@ -25,7 +25,8 @@ class Keys:
     USERS = "users"
     NAME = "name"
     ID = "id"
-    
+    PASSWORD = "password"
+
     # Values of keys for representing host information
     HOST_MGMT_ADDR = "host_mgmt_addr"
     #HOST_EXP_ADDR = "host_exp_addr"
@@ -57,7 +58,6 @@ class User:
     CLONE_MGMT_NETWORK_SUFFIX = ".1.1/16"
     CLONE_MGMT_ADDR_FIRST_SUFFIX = 2
 
-
     # Variables defined in "users.yml" and used as such in the output files
     DEFINED_VARIABLES = [
         Keys.HOST_MGMT_ADDR, #Keys.HOST_EXP_ADDR,
@@ -87,9 +87,11 @@ class User:
 
         self.name = user_info.get(Keys.NAME, None)
         assert self.name != None
-            
+
         self.id = user_info.get(Keys.ID, None)
         assert self.id != None
+
+        self.password = user_info.get(Keys.PASSWORD, None)
 
         for variable in self.DEFINED_VARIABLES:
             if DO_DEBUG:
