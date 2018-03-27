@@ -55,11 +55,14 @@ SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed 
 DEBUG = False
 USE_CYRIS = True
 
-# Temporary solution until better way is implemented
+# Temporary solution until a better way is implemented for generating scripts
+# to connect to cyber range based on the output of CyRIS
+# NOTE: Script generation functionality is not currently supported, so don't
+#       enable it unless you know what you are doing
 USE_CNT2LMS_SCRIPT_GENERATION = False
-CYRIS_MASTER_HOST = "172.16.1.7"
+CYRIS_MASTER_HOST = "172.16.1.10"
 CYRIS_MASTER_ACCOUNT = "cyuser"
-CNT2LMS_PATH = "/home/cyuser/moodle/cnt2lms/"
+CNT2LMS_PATH = "/home/cyuser/cylms/"
 
 
 #############################################################################
@@ -115,9 +118,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "RANGE_ID: %s" % (range_id)
             print SEPARATOR
 
-            
+
         ## Handle user information
-        
+
         # Get user information from YAML file
         # Note: Only reading data that is (potentially) modified externally =>
         #       no need for synchronization
@@ -134,7 +137,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_error(REQUEST_ERROR, "Invalid user id")
             return
 
-        
+
         ## Handle action information
 
         # Check that action is valid
@@ -167,7 +170,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 print "* ERROR: instsrv: Could not write to file %s." % (range_file_name)
 
             print "* INFO: instsrv: Start cyber range instantiation."
-            
+
             # Use CyRIS to really do cyber range instantiation
             if USE_CYRIS:
                 try:
@@ -199,7 +202,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                             with open(notification_filename, 'r') as notification_file:
                                 notification_file_content = notification_file.read()
                                 message = urllib.quote(notification_file_content)
-                                
+
                             response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
 
                             # We try to prepare the terminal for Moodle, but
@@ -272,7 +275,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
 
             print "* INFO: instsrv: Start destruction of cyber range with id %s." % (range_id)
-            
+
             # Use CyRIS to really do cyber range destruction
             if USE_CYRIS:
                 destruction_filename = CYRIS_PATH + CYRIS_DESTRUCTION_SCRIPT
@@ -285,7 +288,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 else:
                     response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
                                                            "CyRIS destruction issue")
-                
+
             # Don't use CyRIS, just simulate the destruction
             else:
                 # Simulate time needed to destroy the cyber range
@@ -311,7 +314,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(HTTP_OK_CODE)
         self.send_header("Content-type", "text/html")
         self.end_headers() 
-           
+
         # Send scenario database content information to requester
         self.wfile.write(response_content)
 
@@ -352,7 +355,7 @@ def usage():
     print "-h, --help         Display help"
     print "-n, --no-inst      Disable instantiation => only simulate actions"
     print "-p, --path <PATH>  The location where CyRIS is installed\n"
-    
+
 
 # Use threads to handle multiple clients
 # Note: By using ForkingMixIn instead of ThreadingMixIn,
