@@ -29,7 +29,7 @@ SERVER_PORT   = 8083
 HTTP_OK_CODE  = 200
 REQUEST_ERROR = 404
 SERVER_ERROR  = 500
-LOCAL_SERVER  = False
+LOCAL_SERVER  = True
 SERVE_FOREVER = True # Use serve count if not using local server?!
 ENABLE_THREADS = True
 
@@ -63,7 +63,6 @@ USE_CNT2LMS_SCRIPT_GENERATION = False
 CYRIS_MASTER_HOST = "172.16.1.10"
 CYRIS_MASTER_ACCOUNT = "cyuser"
 CNT2LMS_PATH = "/home/cyuser/cylms/"
-
 
 #############################################################################
 # Manage the instantiation server functionality
@@ -413,7 +412,7 @@ def main(argv):
             server = HTTPServer((server_address, server_port), RequestHandler)
 
         # Start the web server
-        print "* INFO: instsrv: CyTrONE instantiation server started on %s:%d%s." % (
+        print "* INFO: instsrv: CyTrONE instantiation server listens on %s:%d%s." % (
             server_address, server_port, multi_threading)
         if not USE_CYRIS:
             print "* INFO: instsrv: CyRIS use is disabled => only simulate actions."

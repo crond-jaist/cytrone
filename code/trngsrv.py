@@ -4,7 +4,7 @@
 # Classes related to the CyTrONE training server operation
 #############################################################################
 
-#External imports
+# External imports
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import ssl
 import urllib
@@ -87,7 +87,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     # - lock_saved_configurations: saved configurations list
     lock_active_sessions = threading.Lock()
     lock_saved_configurations = threading.Lock()
-    
+
     #########################################################################
     # Print log messages with custom format
     # Default format is shown below:
@@ -127,9 +127,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 cyber_range_id = id
                 #print "* DEBUG: trngsrv: generated id=%d pending_sessions=%s" % (id, pending_sessions)
                 break
-        
+
         return cyber_range_id
-        
+
     #########################################################################
     # Check whether a range with the given id is active for the
     # specified user_id
@@ -145,7 +145,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return True
         else:
             return False
-        
+
     #########################################################################
     # Handle POST message
     def do_POST(self):
@@ -188,7 +188,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             print SEPARATOR
 
         ## Verify user information
-        
+
         # Get user information from YAML file
         # Note: Only reading data that is (potentially) modified externally =>
         #       no need for synchronization
@@ -202,7 +202,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Check that user id is valid
         if not user_id:
             self.respond_error(Storyboard.USER_ID_MISSING_ERROR)
-            return        
+            return
         user_obj = user_info.get_user(user_id) 
         if not user_obj:
             self.respond_error(Storyboard.USER_ID_INVALID_ERROR)
@@ -273,11 +273,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Note: Only reading data that is (potentially) modified externally =>
         #       no need for synchronization
         if action == query.Parameters.FETCH_CONTENT: 
-        
+
             # Convert the training info to the external JSON
             # representation that will be provided to the client
             response_data = training_info.get_JSON_representation()
-        
+
         ####################################################################
         # Create training action
         # Note: Requires synchronized access to active sessions list
@@ -326,9 +326,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.removePendingSession(cyber_range_id)
                 self.respond_error(Storyboard.CONTENT_IDENTIFICATION_ERROR)
                 return
-                
+
             content_file_name = DATABASE_DIR + content_file_name
-            
+
             if DEBUG:
                 print "* DEBUG: trngsrv: Training content file: %s" % (content_file_name)
 
@@ -337,7 +337,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 content_file = open(content_file_name, "r")
                 content_file_content = content_file.read()
                 content_file.close()
-                
+
             except IOError as error:
                 print "* ERROR: trngsrv: File error: %s." % (error)
                 self.removePendingSession(cyber_range_id)
@@ -375,7 +375,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 # Save the response data
                 contsrv_response = data
-                
+
             except IOError as error:
                 print "* ERROR: trngsrv: URL error: %s." % (error)
                 self.removePendingSession(cyber_range_id)
@@ -389,9 +389,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.removePendingSession(cyber_range_id)
                 self.respond_error(Storyboard.TEMPLATE_IDENTIFICATION_ERROR)
                 return
-                
+
             spec_file_name = DATABASE_DIR + spec_file_name
-            
+
             if DEBUG:
                 print "* DEBUG: trngsrv: Scenario specification file: %s" % (spec_file_name)
 
@@ -400,7 +400,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 spec_file = open(spec_file_name, "r")
                 spec_file_content = spec_file.read()
                 spec_file.close()
-                
+
             except IOError as error:
                 print "* ERROR: trngsrv: File error: %s." % (error)
                 self.removePendingSession(cyber_range_id)
@@ -408,7 +408,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
 
             # Do instantiation
-            try:                    
+            try:
                 # Replace variables in the specification file
                 spec_file_content = user_obj.replace_variables(spec_file_content, cyber_range_id, instance_count_value)
 
@@ -438,7 +438,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 print "* DEBUG: trngsrv: Response status:", status
                 print "* DEBUG: trngsrv: Response message:", message
-                
+
                 if status == Storyboard.SERVER_STATUS_SUCCESS:
                     session_name = "Training Session #%s" % (cyber_range_id)
                     crt_time = time.asctime()
@@ -466,7 +466,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     print "* ERROR: trngsrv: Range instantiation error."
                     self.respond_error(Storyboard.INSTANTIATION_ERROR)
                     return
-                
+
                 # Save the response data
                 instsrv_response = data
 
@@ -501,11 +501,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # TODO: Catch error in operation above 
             finally:
                 self.lock_saved_configurations.release()
-                
+
             # Convert the training session info to the external JSON
             # representation that will be provided to the client
             response_data = session_info.get_JSON_representation(user_id)
-        
+
         ####################################################################
         # Retrieve active training sessions action
         # Note: Requires synchronized access to active sessions list        
@@ -520,11 +520,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # TODO: Catch error in operation above 
             finally:
                 self.lock_active_sessions.release()
-                
+
             # Convert the training session info to the external JSON
             # representation that will be provided to the client
             response_data = session_info.get_JSON_representation(user_id)
-        
+
         ####################################################################
         # End training action
         # Note: Requires synchronized access to active sessions list        
@@ -602,7 +602,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     print "* DEBUG: trngsrv: Instantiation server response body: %s" % (data)
 
                 (status, message) = query.Response.parse_server_response(data)
-                
+
                 if status == Storyboard.SERVER_STATUS_SUCCESS:
 
                     self.lock_active_sessions.acquire()
@@ -625,7 +625,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     print "* ERROR: trngsrv: Range destruction error: %s." % (message)
                     self.respond_error(Storyboard.DESTRUCTION_ERROR)
                     return
-                    
+
                 instsrv_response = data
 
                 if DEBUG:
@@ -665,7 +665,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # Respond to requester that operation was successful
     def respond_success(self, response_data):
-        
+
         # Send response header to requester (triggers log_message())
         self.send_response(HTTP_STATUS_OK)
         self.send_header("Content-type", "text/html")
@@ -694,7 +694,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # Respond to requester that operation encountered an error
     def respond_error(self, message):
-    
+
         # Send response header to requester (triggers log_message())
         # Note: Error information is included in standard successful responses
         self.send_response(HTTP_STATUS_OK)
@@ -710,7 +710,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             response_message = '"message": "' + message + '"'
             response_body = '[{' + response_status + ", " + response_message + '}]'
         else:
-            response_body = '[{' + response_status + '}]'         
+            response_body = '[{' + response_status + '}]'
 
         # Send response to requester
         self.wfile.write(response_body)
@@ -730,7 +730,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 def usage():
     print "OVERVIEW: CyTrONE training server that manages the content and instantiation servers.\n"
     print "USAGE: trngsrv.py [options]\n"
-    
+
     print "OPTIONS:"
     print "-h, --help         Display help\n"
 
@@ -750,7 +750,7 @@ def main(argv):
     print "#########################################################################"
     print "CyTrONE v%s: Integrated cybersecurity training framework" % (CYTRONE_VERSION)
     print "#########################################################################"
-    
+
     # Parse command line arguments
     try:
         opts, args = getopt.getopt(argv, "h", ["help"])
@@ -787,7 +787,7 @@ def main(argv):
                                              ca_certs=None, server_side=True)
 
         # Start web server
-        print "* INFO: trngsrv: CyTrONE training server started on %s:%d%s." % (
+        print "* INFO: trngsrv: CyTrONE training server listens on %s:%d%s." % (
             server_address, server_port, multi_threading)
         if SERVE_FOREVER:
             server.serve_forever()
@@ -801,7 +801,7 @@ def main(argv):
 
     print "* INFO: trngsrv: CyTrONE training server ended execution."
 
-        
+
 #############################################################################
 # Run server
 if __name__ == "__main__":

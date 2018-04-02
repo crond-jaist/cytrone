@@ -30,7 +30,7 @@ SERVER_PORT   = 8084
 SUCCESS_CODE  = 200
 REQUEST_ERROR = 404
 SERVER_ERROR  = 500
-LOCAL_SERVER  = False
+LOCAL_SERVER  = True
 SERVE_FOREVER = True # Use serve count if not using local server?!
 RESPONSE_SUCCESS = '[{"status": "SUCCESS"}]'
 RESPONSE_ERROR = '[{"status": "ERROR"}]'
@@ -98,9 +98,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "RANGE_ID: %s" % (range_id)
             print SEPARATOR
 
-            
+
         ## Handle user information
-        
+
         # Get user information from YAML file
         # Note: Only reading data that is (potentially) modified externally =>
         #       no need for synchronization
@@ -118,7 +118,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_error(REQUEST_ERROR, "Invalid user id")
             return
 
-        
+
         ## Handle action information
 
         # Check that action is valid
@@ -161,7 +161,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 except IOError:
                     self.send_error(SERVER_ERROR, "LMS upload I/O error")
                     return
-            
+
             # Don't use Moodle, just simulate the content upload
             else:
                 # Simulate time needed to instantiate the cyber range
@@ -182,7 +182,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif action == query.Parameters.RESET_CONTENT: 
 
             print "* INFO: contsrv: Start LMS content reset."
-            
+
             # Use Moodle to really do the content reset
             if USE_MOODLE:
                 try:
@@ -197,7 +197,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 except IOError:
                     self.send_error(SERVER_ERROR, "LMS reset I/O error")
                     return
-            
+
             # Don't use Moodle, just simulate the content reset
             else:
                 # Simulate time needed to instantiate the cyber range
@@ -223,14 +223,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(SUCCESS_CODE)
         self.send_header("Content-type", "text/html")
         self.end_headers() 
-           
+
         # Send scenario database content information to requester
         self.wfile.write(response_content)
 
         # Output server reply
         print "* INFO: contsrv: Server response content: %s" % (response_content)
 
-        
+
 # Print usage information
 def usage():
     print "OVERVIEW: CyTrONE content server that manages the cnt2lms training content to LMS converter.\n"
@@ -256,7 +256,7 @@ def main(argv):
     global USE_MOODLE
     global CNT2LMS_PATH
     global SETTINGS_PATH
-    
+
     # Parse command line arguments
     try:
         opts, args = getopt.getopt(argv, "hnp:s:", ["help", "no-lms", "path=", "settings="])
@@ -305,16 +305,16 @@ def main(argv):
             multi_threading = " (multi-threading mode)"
         else:
             server = HTTPServer((server_address, server_port), RequestHandler)
-            
+
         # Start the web server
-        print "* INFO: contsrv: CyTrONE content server started on %s:%d%s." % (
+        print "* INFO: contsrv: CyTrONE content server listens on %s:%d%s." % (
             server_address, server_port, multi_threading)
         if not USE_MOODLE:
             print "* INFO: contsrv: LMS use is disabled => only simulate actions."
         else:
             print "* INFO: contsrv: Using cnt2lms software installed in %s." % (CNT2LMS_PATH)
             print "* INFO: contsrv: Using cnt2lms settings located in %s." % (SETTINGS_PATH)
-            
+
         if SERVE_FOREVER:
             server.serve_forever()
         else:
@@ -323,7 +323,7 @@ def main(argv):
     # Catch socket errors
     except IOError:
         print "* ERROR: contsrv: CyTrONE content server: HTTPServer error (server may be running already)."
-    
+
     # Deal with keyboard interrupts
     except KeyboardInterrupt:
         print "* INFO: contsrv: Interrupted via ^C => shut down server."
