@@ -3,18 +3,18 @@
 Dear user,
 
 Thank you very much for using our cybersecurity training framework.
-We would like to inform you that Training Session #N is ready to
+We would like to inform you that Training Session #M is ready to
 use. Please find below detailed information about how to access the
 created cyber range instances:
 
 - Total number of cyber range instances: 2
 
 - Cyber range instance #1:
-  Login: ssh trainee1abcd@172.16.1.5 -p 60123
+  Login: ssh trainee01@172.16.1.10 -p 60123
   Password: abcdefghij
 
 - Cyber range instance #2:
-  Login: ssh trainee2klmn@172.16.1.5 -p 64567
+  Login: ssh trainee02@172.16.1.10 -p 64567
   Password: klmnopqrst
 
 We hope you will gain valuable knowledge about cybersecurity through
