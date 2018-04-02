@@ -1,0 +1,7 @@
+---
+- training:
+  - id: Default
+    title: Default content for inactive sessions
+    overview: |
+      <p>This is a placeholder used to indicate that the corresponding training session is not currently active.<br>
+         Please contact the training instructor if you believe this is supposed to be a valid session.</p>

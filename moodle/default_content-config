@@ -1,0 +1,4 @@
+[config]
+enable_copy = no
+input_file = /home/cyuser/cnt2lms/default_content.yml
+package_name = /home/cyuser/cnt2lms/default_content.zip
