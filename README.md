@@ -29,12 +29,14 @@ The following steps must be carried out _before_ using CyTrONE:
 * Install the **Moodle** LMS on the host used as training content
   server; please refer to the relevant documentation for
   details. https://moodle.org/
-* Install the **cnt2lms** training content to LMS converter on the
-  same host where Moodle is installed; please refer to the cnt2lms
-  User Guide for details. https://github.com/crond-jaist/cnt2lms/
+* Install the **CyLMS** cybersecurity training support tools for LMS
+  on the same host where Moodle is installed; please refer to the
+  CyLMS User Guide for details. https://github.com/crond-jaist/cylms/
 * Install the **CyRIS** cyber range instantiation system on the hosts
   used for cyber range creation; please refer to the CyRIS User Guide
   for details. https://github.com/crond-jaist/cyris/
+* Install the Web-based UI for CyTrONE; please refer to the
+  corresponding user guide. https://github.com/crond-jaist/cytrone-ui-web
 
 
 ## Setup
@@ -54,11 +56,10 @@ files for details):
      information.
 
 Note that the following software is required to run CyTrONE
-(these requirements are shared with cnt2lms and CyRIS):
-* Python: Currently using version 2.7 on Ubuntu OS.
-* PyYAML: Library for handling YAML files (http://pyyaml.org/);
-  currently using version 3.11.
-
+(some of these requirements are shared with CyLMS and CyRIS):
+* Python: Currently using version 2.7 on Ubuntu OS;
+* PyYAML: Library for handling YAML files;
+* PassLib: Library for handling passwords.
 
 ## Quick Start
 
@@ -98,3 +99,5 @@ following paper:
 "CyTrONE: An Integrated Cybersecurity Training Framework",
 International Conference on Information Systems Security and Privacy
 (ICISSP 2017), Porto, Portugal, February 19-21, 2017, pp. 157-166.
+
+For the list of contributors, please check the file CONTRIBUTORS.

@@ -1,4 +1,16 @@
 
+CyTrONE v1.0
+------------
+* Added support for HTTPS communication and password-based
+  authentication to access CyTrONE functionality
+* Included self-signed certificate files to make it possible to enable
+  the above features by default
+* Included a content description file for generating the default
+  content shown for inactive training sessions
+* Revised and updated the training content
+* Updated the configuration files for CyLMS so as to match the new
+  required syntax
+
 CyTrONE v0.2
 ------------
 * Updated sample training content files according to modifications
