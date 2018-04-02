@@ -42,8 +42,6 @@ INSTANTIATION_SERVER_URL = "http://127.0.0.1:8083"
 MAX_SESSIONS = 5
 INVALID_SESSION_ID = -1
 ENABLE_THREADS = True
-ENABLE_HTTPS = False
-ENABLE_PASSWORD = False
 
 # Names of files containing training-related information
 USERS_FILE  = "users.yml"
@@ -157,7 +155,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         print ""
         print SEPARATO2
-        if ENABLE_PASSWORD:
+        if Storyboard.ENABLE_PASSWORD:
             print("* INFO: trngsrv: Request POST parameters: [not shown because password use is enabled]")
         else:
             print("* INFO: trngsrv: Request POST parameters: {}".format(params))
@@ -211,7 +209,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         # Check password (if enabled)
-        if ENABLE_PASSWORD:
+        if Storyboard.ENABLE_PASSWORD:
             # Check whether password exists in database for current user
             if not user_obj.password:
                 self.respond_error(Storyboard.USER_PASSWORD_NOT_IN_DATABASE_ERROR)
@@ -783,13 +781,10 @@ def main(argv):
             server = HTTPServer((server_address, server_port), RequestHandler)
 
         # Use SSL socket if HTTPS is enabled
-        if ENABLE_HTTPS:
+        if Storyboard.ENABLE_HTTPS:
             print("* INFO: trngsrv: HTTPS is enabled => set up SSL socket")
-            server.socket = ssl.wrap_socket (server.socket,
-                                             keyfile="crond-gw.jaist.ac.jp.key",
-                                             certfile="crond-gw.jaist.ac.jp.cer",
-                                             ca_certs="nii-odca3sha1.cer",
-                                             server_side=True)
+            server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt",
+                                             ca_certs=None, server_side=True)
 
         # Start web server
         print "* INFO: trngsrv: CyTrONE training server started on %s:%d%s." % (

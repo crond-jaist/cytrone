@@ -26,8 +26,6 @@ from storyboard import Storyboard
 SEPARATOR = "----------------------------------------------------------------"
 HTTP_PREFIX="http://"
 HTTPS_PREFIX="https://"
-ENABLE_HTTPS = False
-ENABLE_PASSWORD = False
 
 # Debugging constants
 DATABASE_DIR = "../database/"
@@ -55,7 +53,7 @@ try:
 
     # If no http-like prefix exists, add the appropriate one
     if not (server_url.startswith(HTTP_PREFIX) or server_url.startswith(HTTPS_PREFIX)):
-        if ENABLE_HTTPS:
+        if Storyboard.ENABLE_HTTPS:
             server_url = HTTPS_PREFIX + server_url
         else:
             server_url = HTTP_PREFIX + server_url
@@ -82,17 +80,18 @@ try:
             logging.error("Cannot read from file {0}.".format(SAMPLE_INSTANTIATE_RANGE))
 
     # Connect to server with the given POST parameters
-    if ENABLE_PASSWORD:
+    if Storyboard.ENABLE_PASSWORD:
         logging.info("Client POST parameters: [not shown because password use is enabled]")
     else:
         logging.info("Client POST parameters: "+ POST_parameters)
     if POST_parameters:
-        if ENABLE_HTTPS:
+        if Storyboard.ENABLE_HTTPS:
             logging.info("HTTPS is enabled => set up SSL connection (currently w/o checking!)")
             ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            #ssl_context.load_verify_locations("/home/crond/cytrone/code/nii-odca3sha1.cer")
+            # The 2 options below should be commented out after a proper SSL certificate is configured,
+            # but we need them since we only provide a self-signed certificate with the source code
+            ssl_context.check_hostname = False # NOTE: Comment out or set to 'True'
+            ssl_context.verify_mode = ssl.CERT_NONE # NOTE: Comment out or set to 'ssl.CERT_REQUIRED'
             data_stream = urllib.urlopen(server_url, POST_parameters, context=ssl_context)
         else:
             data_stream = urllib.urlopen(server_url, POST_parameters)

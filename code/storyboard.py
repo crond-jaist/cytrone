@@ -4,17 +4,24 @@
 #############################################################################
 
 class Storyboard:
+
+    # Global configuration flags
+    ENABLE_HTTPS = True
+    ENABLE_PASSWORD = True
+
+    # Server status keys
     SERVER_STATUS_KEY = "status"
     SERVER_STATUS_SUCCESS = "SUCCESS"
     SERVER_STATUS_ERROR = "ERROR"
     SERVER_MESSAGE_KEY = "message"
-    
+
+    # Server status messages
     USER_SETTINGS_LOADING_ERROR = "Server could not load the user information database"
     USER_ID_MISSING_ERROR = "User id is missing"
     USER_ID_INVALID_ERROR = "User id is invalid"
     USER_PASSWORD_MISSING_ERROR = "User password is missing"
     USER_PASSWORD_NOT_IN_DATABASE_ERROR = "User password not in database"
-    USER_ID_PASSWORD_INVALID_ERROR = "User id/password is invalid"
+    USER_ID_PASSWORD_INVALID_ERROR = "User id and/or password are invalid"
 
     ACTION_MISSING_ERROR = "Action is missing"
     ACTION_INVALID_ERROR = "Action is invalid"
