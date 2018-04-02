@@ -13,12 +13,11 @@
 ACTION="get_sessions"
 #ACTION="get_configurations"
 
-#TRAINING_SERVER=127.0.0.1
-TRAINING_SERVER=gateway
+TRAINING_SERVER=cytrone_host_name_or_ip
+TRAINING_PORT=8082
 
 USER="john_doe"
-#USER="jane_roe"
-
+PASSWORD="john_passwd"
 
 ###########################################################
 # Display training settings
@@ -26,8 +25,9 @@ USER="john_doe"
 echo -e "# Get active training sessions from CyTrONE."
 echo -e "* Training settings:"
 echo -e "  - USER:\t${USER}"
+echo -e "  - PASSWORD:\t******"
 
 
 ###########################################################
 # Execute training creation command
-../code/trngcli.py http://${TRAINING_SERVER}:8082 "user=${USER}&action=${ACTION}"
+../code/trngcli.py ${TRAINING_SERVER}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=${ACTION}"

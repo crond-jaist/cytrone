@@ -13,7 +13,7 @@ MOODLE_HOST=moodle
 echo "# Stop CyTrONE server modules and tunnels."
 
 #################################################
-# Destroy tunnels
+# Destroy tunnels (only needed if tunnels were created)
 echo "* Destroy the tunnel from crond-gw to ${TRAINING_HOST} (port ${TRAINING_PORT})."
 pkill -f tunnel_trngsrv
 if [ $? -eq 1 ];

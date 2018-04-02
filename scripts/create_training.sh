@@ -14,11 +14,11 @@
 ###########################################################
 # Configure training settings
 
-#TRAINING_SERVER=127.0.0.1
-TRAINING_SERVER=gateway
+TRAINING_SERVER=cytrone_host_name_or_ip
+TRAINING_PORT=8082
 
 USER="john_doe"
-#USER="jane_roe"
+PASSWORD="john_passwd"
 
 # Number of cyber range instances to be created
 COUNT=2
@@ -84,6 +84,7 @@ esac
 echo -e "# Create training using CyTrONE."
 echo -e "* Training settings:"
 echo -e "  - USER:\t${USER}"
+echo -e "  - PASSWORD:\t******"
 echo -e "  - TYPE:\t${TYPE}"
 echo -e "  - SCENARIO:\t${SCENARIO}"
 echo -e "  - LEVEL:\t${LEVEL}"
@@ -93,4 +94,4 @@ echo -e "  - LANGUAGE:\t${LANGUAGE}"
 
 ###########################################################
 # Execute training creation command
-../code/trngcli.py http://${TRAINING_SERVER}:8082 "user=${USER}&action=create_training&count=${COUNT}&lang=${LANGUAGE}&type=${TYPE}&scenario=${SCENARIO}&level=${LEVEL}"
+../code/trngcli.py ${TRAINING_SERVER}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=create_training&count=${COUNT}&lang=${LANGUAGE}&type=${TYPE}&scenario=${SCENARIO}&level=${LEVEL}"
