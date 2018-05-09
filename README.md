@@ -10,7 +10,7 @@ Technology (JAIST).
 An overview of CyTrONE is provided below. Based on input from the
 training organizer and a training database, CyTrONE uploads the
 training content to a Learning Management System (LMS) via the helper
-tool called **cnt2lms**, and also creates the associated training
+tool called **CyLMS**, and also creates the associated training
 environment via the cyber range instantiation system called **CyRIS**,
 both developed by CROND as well. Trainees can then access the LMS to
 consult the training content, connect to the cyber range to conduct
@@ -44,14 +44,14 @@ The following steps must be carried out _before_ using CyTrONE:
 To setup CyTrONE follow the steps below:
 1. Extract the CyTrONE archive to the hosts to manage the training and
 to run Moodle. The archive includes the following sub-directories:
-   * "code/": Framework source code written in Python.
-   * "scripts/": Helper scripts for managing and using CyTrONE.
-   * "database/": Sample training content for CyTrONE.
+   * `code/`: Framework source code written in Python.
+   * `scripts/`: Helper scripts for managing and using CyTrONE.
+   * `database/`: Sample training content for CyTrONE.
 2. Configure the helper scripts according to the actual setup (see the
 files for details):
-   * "start_cytrone.sh", "stop_cytrone.sh": To start and stop CyTrONE
+   * `start_cytrone.sh`, `stop_cytrone.sh`: To start and stop CyTrONE
      modules (and ssh tunnels if a gateway is used).
-   * "create_training.sh", "end_training.sh", "get_sessions.sh": To
+   * `create_training.sh`, `end_training.sh`, `get_sessions.sh`: To
      create and end training sessions, as well as get active session
      information.
 
@@ -67,13 +67,13 @@ We provide next the basic steps necessary for using CyTrONE:
 
 1. Start all the CyTrONE modules.
 
-   $ ./start_cytrone.sh
+   `$ ./start_cytrone.sh`
 
 2. Create a new training session by running the command below and
 selecting one of the pre-configured menu choices displayed (these
 choices can be customized by modifying the script itself).
 
-   $ ./create_training.sh
+   `$ ./create_training.sh`
 
 3. Information about how to access the created cyber range will be
 displayed (and trainees must be provided with the details regarding
@@ -81,14 +81,14 @@ the instance allocated to each of them). Verify that the cyber range
 is accessible and that training content is displayed in the Moodle
 LMS.
 
-4. End the training session (assuming the session id is 1).
+4. End the training session (assuming that the session id is 1).
 
-   $ ./end_training.sh 1
+   `$ ./end_training.sh 1`
 
 5. Stop all the CyTrONE modules (when training activities are
 finished).
 
-   $ ./stop_cytrone.sh
+   `$ ./stop_cytrone.sh`
 
 
 ## References
