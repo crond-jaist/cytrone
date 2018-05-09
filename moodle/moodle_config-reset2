@@ -1,5 +1,0 @@
-[config]
-enable_copy = yes
-package_name = /home/cyuser/cytrone/moodle/default_content.zip
-remote_lms = moodle
-destination = /var/www/moodledata/repository/training_content/training_content2.zip
