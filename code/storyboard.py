@@ -9,10 +9,16 @@ class Storyboard:
     ENABLE_HTTPS = True
     ENABLE_PASSWORD = True
 
+    # Separator constants
+    SEPARATOR1 = "-------------------------------------------------------------------------"
+    SEPARATOR2 = "========================================================================="
+    SEPARATOR3 = "#########################################################################"
+
     # Server status keys
     SERVER_STATUS_KEY = "status"
     SERVER_STATUS_SUCCESS = "SUCCESS"
     SERVER_STATUS_ERROR = "ERROR"
+    SERVER_ACTIVITY_ID_KEY = "activity_id"
     SERVER_MESSAGE_KEY = "message"
 
     # Server status messages
@@ -33,7 +39,7 @@ class Storyboard:
 
     INSTANCE_COUNT_MISSING_ERROR = "Instance count is missing"
     INSTANCE_COUNT_INVALID_ERROR = "Instance count is invalid"
-    
+
     TRAINING_TYPE_MISSING_ERROR = "Training type is invalid or missing"
 
     SCENARIO_NAME_MISSING_ERROR = "Scenario name is missing"
@@ -45,7 +51,7 @@ class Storyboard:
     CONTENT_IDENTIFICATION_ERROR = "Server could not determine the training content for the specified scenario and level"
     CONTENT_LOADING_ERROR = "Server could not load the training content"
     CONTENT_UPLOAD_ERROR = "LMS content manager could not upload the training content"
-    CONTENT_RESET_ERROR = "LMS content manager could not reset the training content"
+    CONTENT_REMOVAL_ERROR = "LMS content manager could not remove the training activity"
     CONTENT_SERVER_ERROR = "Server could not communicate with the LMS content manager"
 
     TEMPLATE_IDENTIFICATION_ERROR = "Server could not determine the cyber range template for the specified scenario and level" 

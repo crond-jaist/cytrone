@@ -34,7 +34,8 @@ class Keys:
     LEVELS = "levels"
     LANGUAGE = "language"
     #SPECIFICATION = "specification"
-    COUNT="count"
+    COUNT = "count"
+    ACTIVITY_ID = "activity_id"
 
 
 #############################################################################
@@ -77,8 +78,11 @@ class Session:
             self.count = session_info.get(Keys.COUNT, None)
             assert self.count!=None
 
-    def set_fields(self, name, sess_id, user_id, time,
-                   ttype, scenarios, levels, language, count):
+            self.activity_id = session_info.get(Keys.ACTIVITY_ID, None)
+
+    # Set fields for Session object
+    def set_fields(self, name, sess_id, user_id, time, ttype,
+                   scenarios, levels, language, count, activity_id):
         self.name = name
         self.sess_id = sess_id
         self.user_id = user_id
@@ -89,6 +93,7 @@ class Session:
         self.levels = levels
         self.language = language
         self.count = count
+        self.activity_id = activity_id
         
     # Create a string representation of the session
     def __str__(self):
@@ -101,7 +106,8 @@ class Session:
                  + Keys.SCENARIOS + ": " + str(self.scenarios) + "\n    " \
                  + Keys.LEVELS + ": " + str(self.levels) + "\n    " \
                  + Keys.LANGUAGE + ": " + self.language + "\n    " \
-                 + Keys.COUNT + ": " + self.count
+                 + Keys.COUNT + ": " + self.count + "\n    " \
+                 + Keys.ACTIVITY_ID + ": " + self.activity_id
 
         return string
     
@@ -123,6 +129,7 @@ class Session:
         session_repr[Keys.ID] = self.sess_id
         session_repr[Keys.USER] = self.user_id
         session_repr[Keys.TIME] = self.time
+        session_repr[Keys.ACTIVITY_ID] = self.activity_id
 
         # Content-related info
         session_repr[Keys.TYPE] = self.ttype
@@ -230,11 +237,11 @@ class SessionInfo:
     
     # Add a session with the corresponding parameters
     def add_session(self, session_name, cyber_range_id, user_id, crt_time,
-                    ttype, scenarios, levels, language, count):
+                    ttype, scenarios, levels, language, count, activity_id):
 
         session = Session(None)
         session.set_fields(session_name, cyber_range_id, user_id, crt_time,
-                           ttype, scenarios, levels, language, count)
+                           ttype, scenarios, levels, language, count, activity_id)
         self.sessions.append(session)
 
         #if DO_DEBUG:   
@@ -251,6 +258,15 @@ class SessionInfo:
 
         return False
 
+    # Build a list of active session ids
+    def get_id_list_int(self):
+
+        id_list = []
+        for session in self.sessions:
+            id_list.append(int(session.sess_id))
+
+        return id_list
+
     # Determine whether a session with the given id exists
     def is_session_id(self, cyber_range_id):
 
@@ -266,11 +282,19 @@ class SessionInfo:
 
         for session in self.sessions:
             if session.sess_id == cyber_range_id and session.user_id == user_id:
-
                 return True
 
         return False
 
+    # Get the activity id for a session with given id and a specified user
+    def get_activity_id(self, cyber_range_id, user_id):
+
+        for session in self.sessions:
+            if session.sess_id == cyber_range_id and session.user_id == user_id:
+                return session.activity_id
+
+        return None
+    
     # Store session information in a YAML file
     def write_YAML_file(self, yaml_file_name):
 

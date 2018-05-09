@@ -49,7 +49,7 @@ try:
     else:
         logging.error("Not enough arguments were provided")
         logging.info("Syntax: trngcli.py SRV_ADDR:SRV_PORT POST_PARAMS")
-        quit(-1)
+        sys.exit(1)
 
     # If no http-like prefix exists, add the appropriate one
     if not (server_url.startswith(HTTP_PREFIX) or server_url.startswith(HTTPS_PREFIX)):
@@ -97,7 +97,7 @@ try:
             data_stream = urllib.urlopen(server_url, POST_parameters)
     else:
         logging.error("No POST parameters provided => abort")
-        quit(-1)
+        sys.exit(1)
 
     data = data_stream.read()
 
@@ -207,12 +207,12 @@ try:
             print message
             print SEPARATOR
 
-    elif action == query.Parameters.RESET_CONTENT:        
+    elif action == query.Parameters.REMOVE_CONTENT:        
         logging.info("Content server action '{0}' done Status: {1}.".format(action, status))
 
         # Display message if any (including in case of error)
         if message:
-            logging.info("Showing LMS content reset information... ")
+            logging.info("Showing LMS content removal information... ")
             print SEPARATOR
             print message
             print SEPARATOR

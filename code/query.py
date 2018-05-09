@@ -26,7 +26,7 @@ DO_DEBUG = False
 # Manage the query parameters the training server recognizes
 #############################################################################
 class Parameters:
-    
+
     ## Constants defining keys and values
     # User information
     USER = "user"
@@ -34,7 +34,7 @@ class Parameters:
 
     # Action specification
     ACTION = "action"
-    
+
     FETCH_CONTENT = "fetch_content"         # Training server
     CREATE_TRAINING = "create_training"
     GET_CONFIGURATIONS = "get_configurations"
@@ -45,8 +45,8 @@ class Parameters:
     DESTROY_RANGE = "destroy_range"
 
     UPLOAD_CONTENT = "upload_content"       # Content server
-    RESET_CONTENT = "reset_content"
-    
+    REMOVE_CONTENT = "remove_content"
+
     # Language settings
     LANG = "lang"
     EN = "en"
@@ -59,6 +59,7 @@ class Parameters:
     COUNT = "count"
     DESCRIPTION_FILE = "description_file"
     RANGE_ID = "range_id"
+    ACTIVITY_ID = "activity_id"
 
     #########################################################################
     # Initialize object with parameters from POST message
@@ -81,7 +82,7 @@ class Parameters:
         # Parse the query string into a dictionary (raise exception if
         # there are parsing errors)
         self.parameters = urlparse.parse_qs(query_string, strict_parsing=True)
-        
+
     #########################################################################
     # Return a string representation of the object
     def __str__(self):
@@ -103,12 +104,13 @@ class Parameters:
             self.LEVEL: None,
             self.COUNT: None,
             self.DESCRIPTION_FILE: None,
-            self.RANGE_ID: None
+            self.RANGE_ID: None,
+	    self.ACTIVITY_ID: None
         }
 
         # Get values associated to the key
         values = self.parameters.get(key, default_values[key])
-        
+
         # If values is not None and not a zero length list, return the
         # first element of the list
         if values:
@@ -120,26 +122,33 @@ class Parameters:
 #############################################################################
 class Response:
 
-    # Parse response of instantiation server
+    # Parse response of instantiation/content servers
     @staticmethod
     def parse_server_response(json_data):
 
         try:
-            # Load JSON data                            
+            # Load JSON data
             data = json.loads(json_data)
 
+            # Initialize return values to None
             status = None
-            message = None
-            for item in data:
-                status = item.get(Storyboard.SERVER_STATUS_KEY, None)
-                if status != None:
-                    message = item.get(Storyboard.SERVER_MESSAGE_KEY, None)
-                    break
+            additional_info = None
 
-            return (status, message)
-        
+            # Each item in data is a dictionary, and we get below the values
+            # for each recognized key
+            for item in data:
+
+                # Get status value
+                status = item.get(Storyboard.SERVER_STATUS_KEY, None)
+
+                # Get activity_id or message
+                if item.has_key(Storyboard.SERVER_ACTIVITY_ID_KEY):
+                    additional_info = item.get(Storyboard.SERVER_ACTIVITY_ID_KEY)
+                elif item.has_key(Storyboard.SERVER_MESSAGE_KEY):
+                    additional_info = item.get(Storyboard.SERVER_MESSAGE_KEY)
+
+            return (status, additional_info)
+
         except ValueError as error:
             print "* ERROR: query: %s." % (error)
             return (None, None)
-
-

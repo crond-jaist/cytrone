@@ -39,8 +39,7 @@ LOCAL_SERVER  = False
 SERVE_FOREVER = True # Use serve count if not using local server?!
 CONTENT_SERVER_URL = "http://127.0.0.1:8084"
 INSTANTIATION_SERVER_URL = "http://127.0.0.1:8083"
-MAX_SESSIONS = 5
-INVALID_SESSION_ID = -1
+MAX_SESSIONS = 100
 ENABLE_THREADS = True
 
 # Names of files containing training-related information
@@ -54,10 +53,6 @@ SAVED_CONFIGURATIONS_FILE = "saved_configurations.yml"
 
 # Name of file containing active training sessions info
 ACTIVE_SESSIONS_FILE = "active_sessions.yml"
-
-# Various constants
-SEPARATOR = "-------------------------------------------------------------------------"
-SEPARATO2 = "========================================================================="
 
 # Debugging constants
 DEBUG = False
@@ -98,25 +93,33 @@ class RequestHandler(BaseHTTPRequestHandler):
               (client_host, self.log_date_time_string(), format%args))
 
     #########################################################################
-    # Generate a cyber range id
-    # Note: Requires synchronization for active sessions list
-    def generate_cyber_range_id(self, pending_sessions):
-        # Create a 6-digit hexadecimal id
-        #RANDOM_ID_LENGTH = 6
-        #cyber_range_id = "%0*x" % (RANDOM_ID_LENGTH, random.randrange(16**RANDOM_ID_LENGTH))
+    # Various functions for cyber range id generation
 
+    ## Hexadecimal id [not in use]
+    def generate_id_hexadecimal(self):
+        # Create a 6-digit hexadecimal id
+        RANDOM_ID_LENGTH = 6
+        cyber_range_id = "%0*x" % (RANDOM_ID_LENGTH, random.randrange(16**RANDOM_ID_LENGTH))
+        return cyber_range_id
+
+    ## Random decimal id in given range [not in use]
+    def generate_id_random(self):
         # Create a 3-digit decimal id that is fit for
         # becoming the first byte in an IPv4 address
         # Reference: https://en.wikipedia.org/wiki/Reserved_IP_addresses
-        #invalid_bytes = [10, 100, 127, 169, 172, 192, 198, 203]
-        #done = False
-        #while not done:
-        #    cyber_range_id = random.randint(1,223)
-        #    if cyber_range_id not in invalid_bytes:
-        #        done = True
+        invalid_bytes = [10, 100, 127, 169, 172, 192, 198, 203]
+        done = False
+        while not done:
+            cyber_range_id = random.randint(1,223)
+            if cyber_range_id not in invalid_bytes:
+                done = True
+        return cyber_range_id
 
-        # Create a decimal id between 1 and MAX_SESSIONS
-        cyber_range_id = INVALID_SESSION_ID
+    ## Decimal id between 1 and MAX_SESSIONS with lowest available value [not in use]
+    ## (pending session ids are avoided)
+    ## NOTE: Requires synchronization for active sessions list
+    def generate_id_max_sessions_lowest(self, pending_sessions):
+        cyber_range_id = None
         # Read current session info
         session_info = sessinfo.SessionInfo()
         session_info.parse_YAML_file(ACTIVE_SESSIONS_FILE)
@@ -125,14 +128,45 @@ class RequestHandler(BaseHTTPRequestHandler):
             if not (session_info.is_session_id(str(id))
                     or str(id) in pending_sessions):
                 cyber_range_id = id
-                #print "* DEBUG: trngsrv: generated id=%d pending_sessions=%s" % (id, pending_sessions)
                 break
+        # Returned value should be an integer
+        return cyber_range_id
 
+    ## Decimal id between 1 and MAX_SESSIONS with next available value [in use]
+    ## (if next value is unavailable, use lowest; pending session ids are avoided)
+    ## NOTE: Requires synchronization for active sessions list
+    def generate_id_max_sessions_next(self, pending_sessions):
+        cyber_range_id = None
+        # Read current session info
+        session_info = sessinfo.SessionInfo()
+        session_info.parse_YAML_file(ACTIVE_SESSIONS_FILE)
+        # For set operations we need to represent ids as integer,
+        # not as string as stored internally
+        possible_set = set(range(MAX_SESSIONS+1)) # All possible values
+        invalid_set = set([0]) # Invalid values if any
+        unavailable_set = invalid_set.union(session_info.get_id_list_int()) # Union with active sessions
+        pending_set = set(map(int, pending_sessions))
+        unavailable_set = unavailable_set.union(pending_set) # Union with pending sessions
+        max_unavailable_value = max(unavailable_set)
+        available_set = possible_set.difference(unavailable_set) # Usable values
+        if (max_unavailable_value+1) in available_set:
+            cyber_range_id = (max_unavailable_value+1)
+        elif available_set:
+            cyber_range_id = min(available_set)
+            # Otherwise we'll return the None value set at the beginning
+        # Returned value should be an integer
         return cyber_range_id
 
     #########################################################################
+    # Generate a cyber range id
+    def generate_cyber_range_id(self, pending_sessions):
+
+        return self.generate_id_max_sessions_next(pending_sessions)
+
+    #########################################################################
     # Check whether a range with the given id is active for the
-    # specified user_id
+    # specified user_id;
+    # Return the activity id if session was found, None otherwise
     # Note: Requires synchronization for active sessions list
     def check_range_id_exists(self, range_id, user_id):
 
@@ -142,9 +176,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Check if the given range id (as string) is already used
         if session_info.is_session_id_user(range_id, user_id):
-            return True
+            return session_info.get_activity_id(range_id, user_id)
         else:
-            return False
+            return None
 
     #########################################################################
     # Handle POST message
@@ -154,7 +188,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         params = query.Parameters(self)
 
         print ""
-        print SEPARATO2
+        print Storyboard.SEPARATOR2
         if Storyboard.ENABLE_PASSWORD:
             print("* INFO: trngsrv: Request POST parameters: [not shown because password use is enabled]")
         else:
@@ -172,9 +206,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         range_id = params.get(query.Parameters.RANGE_ID)
 
         if DEBUG:
-            print SEPARATOR
+            print Storyboard.SEPARATOR1
             print "POST PARAMETERS:"
-            print SEPARATOR
+            print Storyboard.SEPARATOR1
             print "USER: %s" % (user_id)
             if password:
                 print "PASSWORD: ******"
@@ -185,7 +219,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "SCENARIO: %s" % (scenario)
             print "LEVEL: %s" % (level)
             print "RANGE_ID: %s" % (range_id)
-            print SEPARATOR
+            print Storyboard.SEPARATOR1
 
         ## Verify user information
 
@@ -309,13 +343,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.lock_active_sessions.acquire()
             try:
                 cyber_range_id = self.generate_cyber_range_id(self.pending_sessions)
-                if cyber_range_id == INVALID_SESSION_ID:
-                    self.respond_error(Storyboard.SESSION_ALLOCATION_ERROR)
-                    return
-                else: # Convert to string for internal representation
+                if cyber_range_id:
+                     # Convert to string for internal representation
                     cyber_range_id = str(cyber_range_id)
                     self.pending_sessions.append(cyber_range_id)
                     print "* INFO: trngsrv: Allocated session with ID #%s." % (cyber_range_id)
+                else:
+                    self.respond_error(Storyboard.SESSION_ALLOCATION_ERROR)
+                    return
             finally:
                 self.lock_active_sessions.release()
 
@@ -364,8 +399,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                 if DEBUG:
                     print "* DEBUG: trngsrv: Content server response body: %s" % (data)
 
-                if Storyboard.SERVER_STATUS_SUCCESS in data:
-                    # Nothing to do on success?!
+                (status, activity_id) = query.Response.parse_server_response(data)
+
+                if DEBUG:
+                    print("* DEBUG: trngsrv: Response status: {}".format(status))
+                    print("* DEBUG: trngsrv: Response activity_id: {}".format(activity_id))
+
+                if status == Storyboard.SERVER_STATUS_SUCCESS:
+                    # Store activity id in session description
                     pass
                 else:
                     print "* ERROR: trngsrv: Content upload error."
@@ -436,8 +477,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 (status, message) = query.Response.parse_server_response(data)
 
-                print "* DEBUG: trngsrv: Response status:", status
-                print "* DEBUG: trngsrv: Response message:", message
+                if DEBUG:
+                    print "* DEBUG: trngsrv: Response status:", status
+                    print "* DEBUG: trngsrv: Response message:", message
 
                 if status == Storyboard.SERVER_STATUS_SUCCESS:
                     session_name = "Training Session #%s" % (cyber_range_id)
@@ -454,11 +496,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                         # Add new session and save to file
                         # Scenarios and levels should be given as arrays,
                         # so we convert values to arrays when passing arguments
-                        session_info.add_session(session_name,
-                                                 cyber_range_id, user_id,
-                                                 crt_time, ttype,
-                                                 [scenario], [level],
-                                                 language, instance_count)
+                        session_info.add_session(session_name, cyber_range_id, user_id,
+                                                 crt_time, ttype, [scenario], [level],
+                                                 language, instance_count, activity_id)
                         session_info.write_YAML_file(ACTIVE_SESSIONS_FILE)
                     finally:
                         self.lock_active_sessions.release()
@@ -535,9 +575,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.respond_error(Storyboard.SESSION_ID_MISSING_ERROR)
                 return
 
+            activity_id = None
             self.lock_active_sessions.acquire()
             try:
-                if not self.check_range_id_exists(range_id, user_id):
+                activity_id = self.check_range_id_exists(range_id, user_id)
+                if not activity_id:
                     print "* ERROR: trngsrv: Session with ID "+ range_id + " doesn't exist for user " + user_id
                     error_msg = Storyboard.SESSION_ID_INVALID_ERROR + ": " + range_id
                     self.respond_error(error_msg)
@@ -545,32 +587,36 @@ class RequestHandler(BaseHTTPRequestHandler):
             finally:
                 self.lock_active_sessions.release()
 
+
             ########################################
-            # Handle content reset
+            # Handle content removal
             try:
-                # Note: creating a dictionary as below does not
+                # Note: Creating a dictionary as below does not
                 # preserve the order of the parameters, but this has
                 # no negative influence in our implementation
                 query_tuples = {
                     query.Parameters.USER: user_id,
-                    query.Parameters.ACTION: query.Parameters.RESET_CONTENT,
-                    query.Parameters.RANGE_ID: range_id
+                    query.Parameters.ACTION: query.Parameters.REMOVE_CONTENT,
+                    query.Parameters.RANGE_ID: range_id,
+                    query.Parameters.ACTIVITY_ID: activity_id
                 }
 
                 query_params = urllib.urlencode(query_tuples)
-                print "* INFO: trngsrv: Send reset request to content server %s." % (CONTENT_SERVER_URL) 
+                print "* INFO: trngsrv: Send removal request to content server %s." % (CONTENT_SERVER_URL) 
                 print "* INFO: trngsrv: POST parameters: %s" % (query_params)
                 data_stream = urllib.urlopen(CONTENT_SERVER_URL, query_params)
                 data = data_stream.read()
                 if DEBUG:
                     print "* DEBUG: trngsrv: Content server response body: %s" % (data)
 
+                # We don't parse the response since the content server does not provide
+                # a uniformly formatted one; instead we only check for SUCCESS key
                 if Storyboard.SERVER_STATUS_SUCCESS in data:
-                    # Nothing to do on success?
+                    # Nothing to do on success as there is no additional info provided
                     pass
                 else:
-                    print "* ERROR: trngsrv: Content reset error."
-                    self.respond_error(Storyboard.CONTENT_RESET_ERROR)
+                    print "* ERROR: trngsrv: Content removal error."
+                    self.respond_error(Storyboard.CONTENT_REMOVAL_ERROR)
                     return
 
                 # Save the response data
@@ -690,7 +736,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Output server response body
         print "* INFO: trngsrv: Server response body: %s" % (response_body)
-        print SEPARATO2
+        print Storyboard.SEPARATOR2
 
     # Respond to requester that operation encountered an error
     def respond_error(self, message):
@@ -717,7 +763,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Output server response body
         print "* INFO: trngsrv: Server response body: %s" % (response_body)
-        print SEPARATO2
+        print Storyboard.SEPARATOR2
 
     #########################################################################
     # POST request to another server (the instantiation server)
@@ -747,9 +793,9 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 #############################################################################
 def main(argv):
 
-    print "#########################################################################"
+    print Storyboard.SEPARATOR3
     print "CyTrONE v%s: Integrated cybersecurity training framework" % (CYTRONE_VERSION)
-    print "#########################################################################"
+    print Storyboard.SEPARATOR3
 
     # Parse command line arguments
     try:
@@ -757,7 +803,7 @@ def main(argv):
     except getopt.GetoptError as err:
         print "* ERROR: trngsrv: Command-line argument error: %s" % (str(err))
         usage()
-        sys.exit(-1)
+        sys.exit(1)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()

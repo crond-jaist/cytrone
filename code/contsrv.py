@@ -6,19 +6,18 @@
 
 # External imports
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-#import urlparse
 import time
 import random
-#import subprocess
+import subprocess
 import os
 import sys
 import getopt
 from SocketServer import ThreadingMixIn
-#import threading
 
 # Internal imports
 import userinfo
 import query
+from storyboard import Storyboard
 
 #############################################################################
 # Constants
@@ -32,8 +31,11 @@ REQUEST_ERROR = 404
 SERVER_ERROR  = 500
 LOCAL_SERVER  = True
 SERVE_FOREVER = True # Use serve count if not using local server?!
-RESPONSE_SUCCESS = '[{"status": "SUCCESS"}]'
-RESPONSE_ERROR = '[{"status": "ERROR"}]'
+RESPONSE_SUCCESS = '[{"' + Storyboard.SERVER_STATUS_KEY + '": "' + Storyboard.SERVER_STATUS_SUCCESS + '"}]'
+RESPONSE_SUCCESS_ID_PREFIX = '[{"' + Storyboard.SERVER_STATUS_KEY + '": "' + Storyboard.SERVER_STATUS_SUCCESS \
+                             + '", "' + Storyboard.SERVER_ACTIVITY_ID_KEY + '": "'
+RESPONSE_SUCCESS_ID_SUFFIX = '"}]'
+RESPONSE_ERROR = '[{"' + Storyboard.SERVER_STATUS_KEY + '": "' + Storyboard.SERVER_STATUS_ERROR + '"}]'
 ENABLE_THREADS = True
 
 # Names of files containing training-related information
@@ -43,10 +45,10 @@ USERS_FILE  = "users.yml"
 SEPARATOR = "-----------------------------------------------------------------"
 DATABASE_DIR = "../database/"
 CONTENT_DESCRIPTION_TEMPLATE = "tmp_content_description-{}.yml"
-DEFAULT_CNT2LMS_PATH = "/home/cyuser/moodle/cnt2lms/"
-DEFAULT_SETTINGS_PATH = "/home/cyuser/moodle/settings/"
-CNT2LMS_PATH = ""
-SETTINGS_PATH = ""
+DEFAULT_CYLMS_PATH = "/home/cyuser/cylms/"
+DEFAULT_CYLMS_CONFIG = "/home/cyuser/cytrone/moodle/cylms_config"
+CYLMS_PATH = ""
+CYLMS_CONFIG = ""
 SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed interval
 
 # Debugging constants
@@ -60,7 +62,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # List of valid actions recognized by this server
     VALID_ACTIONS = [query.Parameters.UPLOAD_CONTENT,
-                     query.Parameters.RESET_CONTENT]
+                     query.Parameters.REMOVE_CONTENT]
 
     #########################################################################
     # Print log messages with custom format
@@ -87,6 +89,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         action = params.get(query.Parameters.ACTION)
         description_file = params.get(query.Parameters.DESCRIPTION_FILE)
         range_id = params.get(query.Parameters.RANGE_ID)
+        activity_id = params.get(query.Parameters.ACTIVITY_ID)
 
         if DO_DEBUG:
             print SEPARATOR
@@ -96,6 +99,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "ACTION: %s" % (action)
             print "DESCRIPTION FILE:\n%s" % (description_file) 
             print "RANGE_ID: %s" % (range_id)
+            print "ACTIVITY_ID: %s" % (activity_id)
             print SEPARATOR
 
 
@@ -150,14 +154,32 @@ class RequestHandler(BaseHTTPRequestHandler):
             # Use Moodle to really do the content upload
             if USE_MOODLE:
                 try:
-                    command = "python -u " + CNT2LMS_PATH + "cnt2lms.py " + SETTINGS_PATH + "moodle_config-upload" + range_id
-                    return_value = os.system(command)
-                    exit_status = os.WEXITSTATUS(return_value)
-                    if exit_status == 0:
-                        response_content = RESPONSE_SUCCESS
-                    else:
-                        self.send_error(SERVER_ERROR, "LMS upload issue")
+                    # ./cylms.py --convert-content training_example.yml --config-file config_example --add-to-lms 1
+                    try:
+                        add_output = subprocess.check_output(
+                            ["python", "-u", CYLMS_PATH + "cylms.py", "--convert-content", content_file_name,
+                             "--config-file", CYLMS_CONFIG, "--add-to-lms", range_id], stderr=subprocess.STDOUT)
+                        # Find the activity id
+                        activity_id = None
+                        for output_line in add_output.splitlines():
+                            print(output_line)
+                            # Extract the course id
+                            activity_id_tag = "activity_id="
+                            if activity_id_tag in output_line:
+                                # Split line of form ...to LMS successfully => activity_id=101
+                                activity_id = output_line.split(activity_id_tag)[1]
+                                if DO_DEBUG: print("* DEBUG: contsrv: Extracted activity id from command output: {}".format(activity_id))
+                                response_content = RESPONSE_SUCCESS_ID_PREFIX + activity_id + RESPONSE_SUCCESS_ID_SUFFIX
+
+                        # Check whether the activity id was extracted
+                        if not activity_id:
+                            self.send_error(SERVER_ERROR, "LMS upload issue")
+                            return
+                    except subprocess.CalledProcessError as error:
+                        print("* ERROR: contsrv: Error message: {}".format(error.output)) 
+                        self.send_error(SERVER_ERROR, "CyLMS execution issue")
                         return
+                    
                 except IOError:
                     self.send_error(SERVER_ERROR, "LMS upload I/O error")
                     return
@@ -169,7 +191,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                     sleep_time = random.randint(2,5)
                 else:
                     sleep_time = SIMULATION_DURATION
+                print Storyboard.SEPARATOR3
                 print "* INFO: contsrv: Simulate upload by sleeping %d s." % (sleep_time)
+                print Storyboard.SEPARATOR3
                 time.sleep(sleep_time)
 
                 # Simulate the success or failure of the upload
@@ -179,33 +203,49 @@ class RequestHandler(BaseHTTPRequestHandler):
                 else:
                     response_content = RESPONSE_ERROR
 
-        elif action == query.Parameters.RESET_CONTENT: 
+        elif action == query.Parameters.REMOVE_CONTENT: 
 
-            print "* INFO: contsrv: Start LMS content reset."
+            print "* INFO: contsrv: Start LMS content removal."
 
-            # Use Moodle to really do the content reset
+            # Check that range_id is not empty
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+
+            # Check that activity_id is not empty
+            if not activity_id:
+                self.send_error(REQUEST_ERROR, "Invalid LMS activity id")
+                return
+
+            # Use Moodle to really do the content removal
             if USE_MOODLE:
                 try:
-                    command = "python -u " + CNT2LMS_PATH + "copyToMoodle.py " + SETTINGS_PATH + "moodle_config-reset" + range_id
+                    # ./cylms.py --config-file config_example --remove-from-lms 1,ID
+                    config_arg = " --config-file {}".format(CYLMS_CONFIG)
+                    remove_arg = " --remove-from-lms {},{}".format(range_id, activity_id)
+                    command = "python -u " + CYLMS_PATH + "cylms.py" + config_arg + remove_arg
+                    if DO_DEBUG: print("* DEBUG: contsrv: command: " + command)
                     return_value = os.system(command)
                     exit_status = os.WEXITSTATUS(return_value)
                     if exit_status == 0:
                         response_content = RESPONSE_SUCCESS
                     else:
-                        self.send_error(SERVER_ERROR, "LMS reset issue")
+                        self.send_error(SERVER_ERROR, "LMS content removal issue")
                         return
                 except IOError:
-                    self.send_error(SERVER_ERROR, "LMS reset I/O error")
+                    self.send_error(SERVER_ERROR, "LMS content removal I/O error")
                     return
 
-            # Don't use Moodle, just simulate the content reset
+            # Don't use Moodle, just simulate the content removal
             else:
                 # Simulate time needed to instantiate the cyber range
                 if SIMULATION_DURATION == -1:
                     sleep_time = random.randint(2,5)
                 else:
                     sleep_time = SIMULATION_DURATION
-                print "* INFO: contsrv: Simulate reset by sleeping %d s." % (sleep_time)
+                print Storyboard.SEPARATOR3
+                print "* INFO: contsrv: Simulate removal by sleeping %d s." % (sleep_time)
+                print Storyboard.SEPARATOR3
                 time.sleep(sleep_time)
 
                 # Simulate the success or failure of the upload
@@ -233,13 +273,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 # Print usage information
 def usage():
-    print "OVERVIEW: CyTrONE content server that manages the cnt2lms training content to LMS converter.\n"
+    print "OVERVIEW: CyTrONE content server that manages LMS training support via CyLMS.\n"
     print "USAGE: contsrv.py [options]\n"
     print "OPTIONS:"
-    print "-h, --help             Display help"
-    print "-n, --no-lms           Disable LMS use => only simulate actions"
-    print "-p, --path <PATH>      The location where cnt2lms software is installed"
-    print "-s, --settings <PATH>  The location where cnt2lms settings are placed\n"
+    print "-h, --help           Display help"
+    print "-n, --no-lms         Disable LMS use => only simulate actions"
+    print "-p, --path <PATH>    Set the location where CyLMS is installed"
+    print "-c, --config <FILE>  Set configuration file for LMS operations\n"
 
 # Use threads to handle multiple clients
 # Note: By using ForkingMixIn instead of ThreadingMixIn,
@@ -254,16 +294,16 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def main(argv):
 
     global USE_MOODLE
-    global CNT2LMS_PATH
-    global SETTINGS_PATH
+    global CYLMS_PATH
+    global CYLMS_CONFIG
 
     # Parse command line arguments
     try:
-        opts, args = getopt.getopt(argv, "hnp:s:", ["help", "no-lms", "path=", "settings="])
+        opts, args = getopt.getopt(argv, "hnp:c:", ["help", "no-lms", "path=", "config="])
     except getopt.GetoptError as err:
         print "* ERROR: contsrv: Command-line argument error: %s" % (str(err))
         usage()
-        sys.exit(-1)
+        sys.exit(1)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
@@ -271,23 +311,20 @@ def main(argv):
         elif opt in ("-n", "--no-lms"):
             USE_MOODLE = False;
         elif opt in ("-p", "--path"):
-            CNT2LMS_PATH = arg
-        elif opt in ("-s", "--settings"):
-            SETTINGS_PATH = arg
+            CYLMS_PATH = arg
+        elif opt in ("-c", "--config"):
+            CYLMS_CONFIG = arg
 
     # Assign default value if necessary
-    if not CNT2LMS_PATH:
-        CNT2LMS_PATH = DEFAULT_CNT2LMS_PATH
+    if not CYLMS_PATH:
+        CYLMS_PATH = DEFAULT_CYLMS_PATH
     # Append '/' to path if it does not exist
-    if not CNT2LMS_PATH.endswith("/"):
-        CNT2LMS_PATH += "/"
+    if not CYLMS_PATH.endswith("/"):
+        CYLMS_PATH += "/"
 
     # Assign default value if necessary
-    if not SETTINGS_PATH:
-        SETTINGS_PATH = DEFAULT_SETTINGS_PATH
-    # Append '/' to path if it does not exist
-    if not SETTINGS_PATH.endswith("/"):
-        SETTINGS_PATH += "/"
+    if not CYLMS_CONFIG:
+        CYLMS_CONFIG = DEFAULT_CYLMS_CONFIG
 
     try:
 
@@ -312,8 +349,8 @@ def main(argv):
         if not USE_MOODLE:
             print "* INFO: contsrv: LMS use is disabled => only simulate actions."
         else:
-            print "* INFO: contsrv: Using cnt2lms software installed in %s." % (CNT2LMS_PATH)
-            print "* INFO: contsrv: Using cnt2lms settings located in %s." % (SETTINGS_PATH)
+            print "* INFO: contsrv: Using CyLMS software installed in %s." % (CYLMS_PATH)
+            print "* INFO: contsrv: Using CyLMS configuration file %s." % (CYLMS_CONFIG)
 
         if SERVE_FOREVER:
             server.serve_forever()

@@ -5,11 +5,12 @@
 #############################################################################
 
 import getpass
+import sys
 
-# Used by passlib-based implementation (default, recommended)
+# Used by the passlib-based implementation (default, RECOMMENDED)
 from passlib.hash import pbkdf2_sha256
 
-# Used by built-in implementation (NOT recommended)
+# Used by the built-in implementation (NOT recommended)
 import hashlib
 import random
 
@@ -71,7 +72,7 @@ def main():
         raw_password = getpass.getpass("* INFO: Enter the password to be encoded: ")
         if not raw_password:
             print("* ERROR: Empty passwords are not considered valid, please retry.")
-            quit(-1)
+            sys.exit(1)
         raw_password2 = getpass.getpass("* INFO: Retype the password to be encoded: ")
         if raw_password==raw_password2:
             enc_password = Password.encode(raw_password)

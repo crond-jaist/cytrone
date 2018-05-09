@@ -60,9 +60,10 @@ USE_CYRIS = True
 # NOTE: Script generation functionality is not currently supported, so don't
 #       enable it unless you know what you are doing
 USE_CNT2LMS_SCRIPT_GENERATION = False
-CYRIS_MASTER_HOST = "172.16.1.10"
-CYRIS_MASTER_ACCOUNT = "cyuser"
-CNT2LMS_PATH = "/home/cyuser/cylms/"
+CYRIS_MASTER_HOST = "172.16.1.7"
+CYRIS_MASTER_ACCOUNT = "crond"
+CNT2LMS_PATH = "/home/crond/cylms/"
+
 
 #############################################################################
 # Manage the instantiation server functionality
@@ -245,7 +246,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                     sleep_time = random.randint(2,5)
                 else:
                     sleep_time = SIMULATION_DURATION
+                print Storyboard.SEPARATOR3
                 print "* INFO: instsrv: Simulate instantiation by sleeping %d s." % (sleep_time)
+                print Storyboard.SEPARATOR3
                 time.sleep(sleep_time)
 
                 # Simulate the success or failure of the instantiation
@@ -295,7 +298,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                     sleep_time = random.randint(2,5)
                 else:
                     sleep_time = SIMULATION_DURATION
+                print Storyboard.SEPARATOR3
                 print "* INFO: instsrv: Simulate destruction by sleeping %d s." % (sleep_time)
+                print Storyboard.SEPARATOR3
                 time.sleep(sleep_time)
 
                 # Simulate the success or failure of the destruction
@@ -353,7 +358,7 @@ def usage():
     print "OPTIONS:"
     print "-h, --help         Display help"
     print "-n, --no-inst      Disable instantiation => only simulate actions"
-    print "-p, --path <PATH>  The location where CyRIS is installed\n"
+    print "-p, --path <PATH>  Set the location where CyRIS is installed\n"
 
 
 # Use threads to handle multiple clients
@@ -377,7 +382,7 @@ def main(argv):
     except getopt.GetoptError as err:
         print "* ERROR: instsrv: Command-line argument error: %s" % (str(err))
         usage()
-        sys.exit(-1)
+        sys.exit(1)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
