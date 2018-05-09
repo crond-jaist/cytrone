@@ -26,17 +26,17 @@
         attempt_number: 54
         attack_time: 20170328
 
-    - emulate_traffic_capture_file:
-      - format: pcap
-        file_name: /home/traffic.pcap
-        attack_type: ssh_attack
-        attack_source: 2.95.120.235
-        noise_level: medium
+#    - emulate_traffic_capture_file:
+#      - format: pcap
+#        file_name: /home/traffic.pcap
+#        attack_type: ssh_attack
+#        attack_source: 2.95.120.235
+#        noise_level: medium
 
-    - emulate_malware:
-      - name: DAEMON
-        cpu_utilization: 40
-        mode: dummy_calculation
+#    - emulate_malware:
+#      - name: DAEMON
+#        cpu_utilization: 40
+#        mode: dummy_calculation
 
 - clone_settings:
   - range_id: {{ clone_range_id }}
