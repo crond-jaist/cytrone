@@ -61,8 +61,8 @@ USE_CYRIS = True
 #       enable it unless you know what you are doing
 USE_CNT2LMS_SCRIPT_GENERATION = False
 CYRIS_MASTER_HOST = "172.16.1.7"
-CYRIS_MASTER_ACCOUNT = "crond"
-CNT2LMS_PATH = "/home/crond/cylms/"
+CYRIS_MASTER_ACCOUNT = "cyuser"
+CNT2LMS_PATH = "/home/cyuser/cylms/"
 
 
 #############################################################################
@@ -211,7 +211,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                             # released yet in cnt2lms
                             try:
                                 if USE_CNT2LMS_SCRIPT_GENERATION:
-                                    ssh_command = "ssh -tt -o 'ProxyCommand ssh crond@172.16.1.3 -W %h:%p' crond@moodle"
+                                    ssh_command = "ssh -tt -o 'ProxyCommand ssh cyuser@172.16.1.3 -W %h:%p' cyuser@moodle"
                                     python_command = "python -u " + CNT2LMS_PATH + "get_cyris_result.py " + CYRIS_MASTER_HOST + " " + CYRIS_MASTER_ACCOUNT + " " + CYRIS_PATH + CYRIS_RANGE_DIRECTORY + " " + range_id + " 1"
                                     command = ssh_command + " \"" + python_command + "\""
                                     print "* DEBUG: instsrv: get_cyris_result command: " + command
