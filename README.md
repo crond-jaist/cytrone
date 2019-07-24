@@ -66,12 +66,12 @@ source code from the
 [releases](https://github.com/crond-jaist/cytrone/releases) page
 2. Extract the CyTrONE archive to the hosts to manage the training and
 to run Moodle; the archive includes the following sub-directories:
-   * "code/": Framework source code written in Python
-   * "scripts/": Helper scripts for managing and using CyTrONE
-   * "database/": Sample training content for CyTrONE
+   * 'code/': Framework source code written in Python
+   * 'scripts/': Helper scripts for managing and using CyTrONE
+   * 'database/': Sample training content for CyTrONE
 3. Create a configuration file for the helper scripts used to manage
 CyTrONE according to your actual setup; for this purpose, use the
-provided file "scripts/CONFIG.dist" as template
+provided file 'scripts/CONFIG.dist' as template
 
 Note that the following software is required to run CyTrONE (some of
 these requirements are shared with CyLMS and CyRIS):
@@ -99,7 +99,7 @@ itself). Alternatively, the web-based UI can be used for this purpose.
 displayed (and trainees must be provided with the details regarding
 the instance allocated to each of them); verify that the cyber range
 is accessible and that training content is displayed in the Moodle
-LMS. The helper script named "get_notification.sh" can also be used to
+LMS. The helper script named 'get_notification.sh' can also be used to
 retrieve this information at any time.
 
 4. End the created training session (assuming the session id is
