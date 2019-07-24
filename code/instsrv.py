@@ -36,20 +36,30 @@ ENABLE_THREADS = True
 # Names of files containing training-related information
 USERS_FILE  = "users.yml"
 
-# Other constants
+# Internal constants
 SEPARATOR = "-----------------------------------------------------------------"
 DATABASE_DIR = "../database/"
 RANGE_DESCRIPTION_TEMPLATE = "tmp_range_description-{0}.yml"
+
+# CyRIS related constants
 DEFAULT_CYRIS_PATH = "/home/cyuser/cyris/"
 CYRIS_PATH = ""
 CYRIS_RANGE_DIRECTORY = "cyber_range/" # TODO: This should also be provided as an argument
 CYRIS_STATUS_FILENAME = "cr_creation_status"
 CYRIS_NOTIFICATION_TEMPLATE = "range_notification-cr{0}.txt"
 CYRIS_NOTIFICATION_SIMULATED = "range_notification-simulated.txt"
+CYRIS_DETAILS_TEMPLATE = "range_details-cr{0}.yml"
 #CYRIS_DESTRUCTION_SCRIPT = "whole-controlled-destruction.sh"
 CYRIS_DESTRUCTION_SCRIPT = "main/range_cleanup.py"
 CYRIS_CONFIG_FILENAME = "CONFIG"
-SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed interval
+
+# CyPROM related constants
+DEFAULT_CYPROM_PATH = "/home/cyuser/cyprom/"
+CYPROM_PATH = ""
+
+SIMULATION_DURATION = -1 # Use -1 for random delay, positive value for fixed delay
+SIMULATION_RAND_MIN = 1 # Minimum limit for the random delay range
+SIMULATION_RAND_MAX = 3 # Maximum limit for the random delay range
 
 # Debugging constants
 DEBUG = False
@@ -106,6 +116,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         user_id = params.get(query.Parameters.USER)
         action = params.get(query.Parameters.ACTION)
         description_file = params.get(query.Parameters.DESCRIPTION_FILE)
+        progression_scenario = params.get(query.Parameters.PROGRESSION_SCENARIO)
         range_id = params.get(query.Parameters.RANGE_ID)
 
         if DEBUG:
@@ -115,9 +126,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             print "USER: %s" % (user_id)
             print "ACTION: %s" % (action)
             print "DESCRIPTION FILE:\n%s" % (description_file) 
+            print "PROGRESSION_SCENARIO: %s" % (progression_scenario)
             print "RANGE_ID: %s" % (range_id)
             print SEPARATOR
-
 
         ## Handle user information
 
@@ -137,7 +148,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_error(REQUEST_ERROR, "Invalid user id")
             return
 
-
         ## Handle action information
 
         # Check that action is valid
@@ -147,6 +157,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # If we reached this point, it means processing was successful
         # => act according to each action
+
+        #############################################################################
+        # Instantiate the cyber range action
         if action == query.Parameters.INSTANTIATE_RANGE: 
 
             # Check that description is not empty
@@ -211,7 +224,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                             # released yet in cnt2lms
                             try:
                                 if USE_CNT2LMS_SCRIPT_GENERATION:
-                                    ssh_command = "ssh -tt -o 'ProxyCommand ssh cyuser@172.16.1.3 -W %h:%p' cyuser@moodle"
+                                    ssh_command = "ssh -tt -o 'ProxyCommand ssh cyuser@172.16.1.3 -W %h:%p' root@moodle"
                                     python_command = "python -u " + CNT2LMS_PATH + "get_cyris_result.py " + CYRIS_MASTER_HOST + " " + CYRIS_MASTER_ACCOUNT + " " + CYRIS_PATH + CYRIS_RANGE_DIRECTORY + " " + range_id + " 1"
                                     command = ssh_command + " \"" + python_command + "\""
                                     print "* DEBUG: instsrv: get_cyris_result command: " + command
@@ -228,12 +241,35 @@ class RequestHandler(BaseHTTPRequestHandler):
                                 #self.send_error(SERVER_ERROR, "LMS terminal preparation I/O error)
                                 #return
                                 print "* DEBUG: instsrv: LMS terminal preparation I/O error"
+
+                            # CyPROM related functionality
+                            if progression_scenario:
+
+                                print "* INFO: instsrv: Run CyPROM using scenario '{}'".format(progression_scenario)
+
+                                # Build CyRIS details file name
+                                details_filename_short = CYRIS_DETAILS_TEMPLATE.format(range_id)
+                                details_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                                          CYRIS_RANGE_DIRECTORY,
+                                                                          range_id,
+                                                                          details_filename_short)
+                                # Build CyPROM command (note the background execution!)
+                                cyprom_command = "python -u {0}main/cyprom.py --scenario {1} --cyris {2} &".format(CYPROM_PATH, progression_scenario, details_filename)
+
+                                # Execute the command and handle the exit status
+                                return_value = os.system(cyprom_command)
+                                exit_status = os.WEXITSTATUS(return_value)
+                                if exit_status != 0:
+                                    self.handle_cyris_error(range_id)
+                                    self.send_error(SERVER_ERROR, "CyPROM execution issue")
+                                    return
                         else:
                             # Even though CyRIS is now destroying automatically the cyber range
-                            # in case of error, as it may fail we still try to clean up here
+                            # in case of error, as this may fail, we still try to clean up here
                             self.handle_cyris_error(range_id)
                             response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
                                                                    Storyboard.INSTANTIATION_STATUS_FILE_NOT_FOUND)
+
                 except IOError:
                     self.handle_cyris_error(range_id)
                     self.send_error(SERVER_ERROR, Storyboard.INSTANTIATION_CYRIS_IO_ERROR)
@@ -243,7 +279,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 # Simulate time needed to instantiate the cyber range
                 if SIMULATION_DURATION == -1:
-                    sleep_time = random.randint(2,5)
+                    sleep_time = random.randint(SIMULATION_RAND_MIN, SIMULATION_RAND_MAX)
                 else:
                     sleep_time = SIMULATION_DURATION
                 print Storyboard.SEPARATOR3
@@ -264,11 +300,17 @@ class RequestHandler(BaseHTTPRequestHandler):
                         notification_file_content = notification_file.read()
                         message = urllib.quote(notification_file_content)
                     response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+
+                    # CyPROM related functionality
+                    if progression_scenario:
+                        print "* INFO: instsrv: Simulated CyPROM execution using scenario '{}'.".format(progression_scenario)
+
                 else:
                     response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
                                                            Storyboard.INSTANTIATION_SIMULATED_ERROR)
 
-        # Destroy the cyber range
+        #############################################################################
+        # Destroy the cyber range action
         elif action == query.Parameters.DESTROY_RANGE: 
 
             # Check that the range id is valid
@@ -295,7 +337,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 # Simulate time needed to destroy the cyber range
                 if SIMULATION_DURATION == -1:
-                    sleep_time = random.randint(2,5)
+                    sleep_time = random.randint(SIMULATION_RAND_MIN, SIMULATION_RAND_MAX)
                 else:
                     sleep_time = SIMULATION_DURATION
                 print Storyboard.SEPARATOR3
@@ -356,9 +398,10 @@ def usage():
     print "OVERVIEW: CyTrONE instantiation server that manages the CyRIS cyber range instantiation system.\n"
     print "USAGE: instsrv.py [options]\n"
     print "OPTIONS:"
-    print "-h, --help         Display help"
-    print "-n, --no-inst      Disable instantiation => only simulate actions"
-    print "-p, --path <PATH>  Set the location where CyRIS is installed\n"
+    print "-h, --help           Display help"
+    print "-n, --no-inst        Disable instantiation => only simulate actions"
+    print "-p, --path <PATH>    Set the location where CyRIS is installed"
+    print "-m, --cyprom <PATH>  Set the location where CyPROM is installed\n"
 
 
 # Use threads to handle multiple clients
@@ -375,10 +418,11 @@ def main(argv):
 
     global USE_CYRIS
     global CYRIS_PATH
+    global CYPROM_PATH
 
     # Parse command line arguments
     try:
-        opts, args = getopt.getopt(argv, "hnp:", ["help", "no-inst", "path="])
+        opts, args = getopt.getopt(argv, "hnp:m:", ["help", "no-inst", "path=", "cyprom="])
     except getopt.GetoptError as err:
         print "* ERROR: instsrv: Command-line argument error: %s" % (str(err))
         usage()
@@ -391,13 +435,19 @@ def main(argv):
             USE_CYRIS = False
         elif opt in ("-p", "--path"):
             CYRIS_PATH = arg
+        elif opt in ("-m", "--cyprom"):
+            CYPROM_PATH = arg
 
-    # Assign default value if necessary
+    # Assign default values to CYRIS_PATH and CYPROM_PATH if necessary
     if not CYRIS_PATH:
         CYRIS_PATH = DEFAULT_CYRIS_PATH
-    # Append '/' to path if it does not exist
+    if not CYPROM_PATH:
+        CYPROM_PATH = DEFAULT_CYPROM_PATH
+    # Append '/' to paths names if it is not present
     if not CYRIS_PATH.endswith("/"):
         CYRIS_PATH += "/"
+    if not CYPROM_PATH.endswith("/"):
+        CYPROM_PATH += "/"
 
     try:
 
@@ -423,6 +473,7 @@ def main(argv):
             print "* INFO: instsrv: CyRIS use is disabled => only simulate actions."
         else:
             print "* INFO: instsrv: Using CyRIS software installed in %s." % (CYRIS_PATH)
+            print "* INFO: instsrv: Using CyPROM software installed in %s." % (CYPROM_PATH)
 
         if SERVE_FOREVER:
             server.serve_forever()

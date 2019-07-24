@@ -22,7 +22,6 @@ DO_DEBUG = False
 class Keys:
     
     # Values of keys for session information representation
-    # TODO: Review!
     SESSIONS = "sessions"
     NAME = "name"
     ID = "id"
@@ -33,7 +32,6 @@ class Keys:
     SCENARIOS = "scenarios"
     LEVELS = "levels"
     LANGUAGE = "language"
-    #SPECIFICATION = "specification"
     COUNT = "count"
     ACTIVITY_ID = "activity_id"
 
@@ -392,14 +390,14 @@ class SessionInfo:
 if __name__ == '__main__':
     try:
 
-        enabled = [True, False]
+        enabled = [True, True]
 
         #####################################################################
         # TEST #1
         if enabled[0]:
-            TEST_FILE = "session_info.yml"
-            print SEPARATO2
-            print "TEST #1: Get session information from YAML file: %s." % (
+            TEST_FILE = "active_sessions.yml"
+            print "\n" + SEPARATO2
+            print "TEST #1: Get session information from YAML file: %s" % (
                 TEST_FILE)
             print SEPARATO2
             session_info = SessionInfo()
@@ -411,8 +409,8 @@ if __name__ == '__main__':
         #####################################################################
         # TEST #2
         if enabled[1]:
-            TEST_STRING = '[{"scenarios": [{"levels": [{"specification": "NIST-level1.yml", "name": "Level 1 (Easy)"}, {"specification": "NIST-level2.yml", "name": "Level 2 (Medium)"}, {"specification": "NIST-level3.yml", "name": "Level 3 (Hard)"}], "name": "NIST Information Security Testing and Assessment"}, {"levels": [{"specification": "IR-level1.yml", "name": "Level 1 (Detection)"}, {"specification": "IR-level2.yml", "name": "Level 2 (Forensics)"}, {"specification": "IR-level3.yml", "name": "Level 3 (Response)"}], "name": "Incident Response"}]}]'
-            print SEPARATO2
+            TEST_STRING = '[{"sessions": [{"count": "2", "activity_id": "N/A", "name": "Training Session #1", "language": "en", "scenarios": ["Information Security Testing and Assessment"], "levels": ["Level 1 (Easy)"], "user": "john_doe", "time": "Thu Jul 11 10:43:31 2019", "type": "Scenario-Based Training", "id": "1"}]}]'
+            print "\n" + SEPARATO2
             print "TEST #2: Get session information from JSON string: %s." % (
                 TEST_STRING)
             print SEPARATO2

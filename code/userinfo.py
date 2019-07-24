@@ -117,10 +117,10 @@ class User:
                  + Keys.ID + ": " + self.id
     
 
-    # Replace variables in a scenario specification base on user information
-    def replace_variables(self, specification, cyber_range_id, instance_count):
+    # Replace variables in a range specification based on user information
+    def replace_variables(self, range_file_content, cyber_range_id, instance_count):
 
-        return_string = specification
+        return_string = range_file_content
 
         #ADDR_SUFFIX = "SFX"
 

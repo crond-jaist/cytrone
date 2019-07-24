@@ -27,7 +27,7 @@ from password import Password
 # Constants
 #############################################################################
 
-CYTRONE_VERSION = "1.0"
+CYTRONE_VERSION = "1.1"
 
 # Web server constants
 LOCAL_ADDRESS = "127.0.0.1"
@@ -356,7 +356,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             ########################################
             # Handle content upload
-            content_file_name = training_info.get_content_name(scenario, level)
+            content_file_name = training_info.get_content_file_name(scenario, level)
             if content_file_name == None:
                 self.removePendingSession(cyber_range_id)
                 self.respond_error(Storyboard.CONTENT_IDENTIFICATION_ERROR)
@@ -425,22 +425,25 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             ########################################
             # Handle instantiation
-            spec_file_name = training_info.get_specification_name(scenario, level)
-            if spec_file_name == None:
+            range_file_name = training_info.get_range_file_name(scenario, level)
+            if range_file_name == None:
                 self.removePendingSession(cyber_range_id)
                 self.respond_error(Storyboard.TEMPLATE_IDENTIFICATION_ERROR)
+                # TODO: Should delete the content uploaded above before returning
                 return
 
-            spec_file_name = DATABASE_DIR + spec_file_name
+            range_file_name = DATABASE_DIR + range_file_name
+            progression_scenario_name = training_info.get_progression_scenario_name(scenario, level)
 
             if DEBUG:
-                print "* DEBUG: trngsrv: Scenario specification file: %s" % (spec_file_name)
+                print "* DEBUG: trngsrv: Cyber range file: %s" % (range_file_name)
+                print "* DEBUG: trngsrv: Progression scenario: %s" % (progression_scenario_name)
 
-            # Open the specification file (template)
+            # Open the cyber range file (template)
             try:
-                spec_file = open(spec_file_name, "r")
-                spec_file_content = spec_file.read()
-                spec_file.close()
+                range_file = open(range_file_name, "r")
+                range_file_content = range_file.read()
+                range_file.close()
 
             except IOError as error:
                 print "* ERROR: trngsrv: File error: %s." % (error)
@@ -450,18 +453,22 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             # Do instantiation
             try:
-                # Replace variables in the specification file
-                spec_file_content = user_obj.replace_variables(spec_file_content, cyber_range_id, instance_count_value)
+                # Replace variables in the range file
+                range_file_content = user_obj.replace_variables(range_file_content, cyber_range_id, instance_count_value)
 
-                # Note: creating a dictionary as below does not
+                # NOTE: creating a dictionary as below does not
                 # preserve the order of the parameters, but this has
                 # no negative influence in our implementation
                 query_tuples = {
                     query.Parameters.USER: user_id,
                     query.Parameters.ACTION: query.Parameters.INSTANTIATE_RANGE,
-                    query.Parameters.DESCRIPTION_FILE: spec_file_content,
+                    query.Parameters.DESCRIPTION_FILE: range_file_content,
                     query.Parameters.RANGE_ID: cyber_range_id
                 }
+
+                # If we have a progression scenario defined, we add its name to the query
+                if progression_scenario_name:
+                    query_tuples[query.Parameters.PROGRESSION_SCENARIO] = progression_scenario_name
 
                 query_params = urllib.urlencode(query_tuples)
                 print "* INFO: trngsrv: Send instantiate request to instantiation server %s." % (INSTANTIATION_SERVER_URL)
@@ -829,8 +836,8 @@ def main(argv):
         # Use SSL socket if HTTPS is enabled
         if Storyboard.ENABLE_HTTPS:
             print("* INFO: trngsrv: HTTPS is enabled => set up SSL socket")
-            server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt",
-                                             ca_certs=None, server_side=True)
+            #server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt", ca_certs=None, server_side=True)
+            server.socket = ssl.wrap_socket (server.socket, keyfile="crond-gw.jaist.ac.jp.key", certfile="crond-gw.jaist.ac.jp.cer", ca_certs="nii-odca3sha1.cer", server_side=True)
 
         # Start web server
         print "* INFO: trngsrv: CyTrONE training server listens on %s:%d%s." % (

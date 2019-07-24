@@ -58,6 +58,7 @@ class Parameters:
     LEVEL = "level"
     COUNT = "count"
     DESCRIPTION_FILE = "description_file"
+    PROGRESSION_SCENARIO = "progression_scenario"
     RANGE_ID = "range_id"
     ACTIVITY_ID = "activity_id"
 
@@ -104,6 +105,7 @@ class Parameters:
             self.LEVEL: None,
             self.COUNT: None,
             self.DESCRIPTION_FILE: None,
+            self.PROGRESSION_SCENARIO: None,
             self.RANGE_ID: None,
 	    self.ACTIVITY_ID: None
         }

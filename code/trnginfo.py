@@ -28,7 +28,9 @@ class Keys:
     SCENARIOS = "scenarios"
     LEVELS = "levels"
     CONTENT = "content"
-    SPECIFICATION = "specification"
+    SPECIFICATION = "specification" # Obsolete label => to be removed
+    RANGE = "range"
+    PROGRESSION = "progression"
 
 
 #############################################################################
@@ -116,16 +118,21 @@ class Level:
         self.name = level_info.get(Keys.NAME, None)
         assert self.name!=None
 
-        self.content = level_info.get(Keys.CONTENT, None)
-        self.specification = level_info.get(Keys.SPECIFICATION, None)
-        #assert self.specification!=None
+        self.content_file = level_info.get(Keys.CONTENT, None)
+        self.range_file = level_info.get(Keys.RANGE, None)
+        # Also try alternative (obsolete) label
+        if not self.range_file:
+            self.range_file = level_info.get(Keys.SPECIFICATION, None)
+        #assert self.range_file!=None
+        self.progression_scenario = level_info.get(Keys.PROGRESSION, None)
 
     # Create a string representation of the level
     def __str__(self):
 
         string = "      - " + Keys.NAME + ": " + self.name + "\n        " \
-                 + Keys.CONTENT + ": " + str(self.content) + "\n        " \
-                 + Keys.SPECIFICATION + ": " + str(self.specification)
+                 + Keys.CONTENT + ": " + str(self.content_file) + "\n        " \
+                 + Keys.RANGE + ": " + str(self.range_file) + "\n        " \
+                 + Keys.PROGRESSION + ": " + str(self.progression_scenario)
         return string
 
     def get_JSON_representation(self):
@@ -302,12 +309,12 @@ class TrainingInfo:
 
     # Get the name of the file that contains the training content for the
     # scenario and level provided as arguments
-    def get_content_name(self, scenario_name, level_name):
+    def get_content_file_name(self, scenario_name, level_name):
 
         scenario_name_utf = unicode(scenario_name, 'utf-8') # convert to UTF-8
         level_name_utf = unicode(level_name, 'utf-8') # convert to UTF-8
         
-        content = None
+        content_file = None
         #print "DEBUG: Search for scenario=%s level=%s... (type=%s)" % (scenario_name.__str__(), level_name, type(scenario_name))
 
         for scenario in self.scenarios:
@@ -329,18 +336,18 @@ class TrainingInfo:
                     else:
                         level_name_cmp = level_name
                     if level.name == level_name_cmp:
-                        content = level.content
+                        content_file = level.content_file
 
-        return content
+        return content_file
 
     # Get the name of the file that contains the range specification for the
     # scenario and level provided as arguments
-    def get_specification_name(self, scenario_name, level_name):
+    def get_range_file_name(self, scenario_name, level_name):
 
         scenario_name_utf = unicode(scenario_name, 'utf-8') # convert to UTF-8
         level_name_utf = unicode(level_name, 'utf-8') # convert to UTF-8
         
-        specification = None
+        range_file = None
         #print "DEBUG: Search for scenario=%s level=%s... (type=%s)" % (scenario_name.__str__(), level_name, type(scenario_name))
 
         for scenario in self.scenarios:
@@ -362,10 +369,41 @@ class TrainingInfo:
                     else:
                         level_name_cmp = level_name
                     if level.name == level_name_cmp:
-                        specification = level.specification
+                        range_file = level.range_file
 
-        return specification
+        return range_file
 
+    # Get the name of the file that contains the progression details
+    # for the scenario and level provided as arguments
+    def get_progression_scenario_name(self, scenario_name, level_name):
+
+        scenario_name_utf = unicode(scenario_name, 'utf-8') # convert to UTF-8
+        level_name_utf = unicode(level_name, 'utf-8') # convert to UTF-8
+
+        progression_scenario = None
+
+        for scenario in self.scenarios:
+
+            if type(scenario.name) == types.UnicodeType:
+                # Printing Unicode doesn't work on development servers,
+                # so I commented out the debug message
+                #print "DEBUG: scenario name=%s (type=%s)" % (scenario.name, type(scenario.name))
+                scenario_name_cmp = scenario_name_utf
+            else:
+                scenario_name_cmp = scenario_name
+            if scenario.name == scenario_name_cmp:
+                for level in scenario.levels:
+                    if type(level.name) == types.UnicodeType:
+                        # Printing Unicode doesn't work on development servers,
+                        # so I commented out the debug message
+                        #print "DEBUG: level name=%s (type=%s)" % (level.name, type(level.name))
+                        level_name_cmp = level_name_utf
+                    else:
+                        level_name_cmp = level_name
+                    if level.name == level_name_cmp:
+                        progression_scenario = level.progression_scenario
+
+        return progression_scenario
 
 #############################################################################
 # Testing code for the classes in this file
@@ -408,7 +446,7 @@ if __name__ == '__main__':
         #####################################################################
         # TEST #3
         if enabled[2]:
-            TEST_STRING = '[{"scenarios": [{"levels": [{"specification": "NIST-level1.yml", "name": "Level 1 (Easy)"}, {"specification": "NIST-level2.yml", "name": "Level 2 (Medium)"}, {"specification": "NIST-level3.yml", "name": "Level 3 (Hard)"}], "name": "NIST Information Security Testing and Assessment"}, {"levels": [{"specification": "IR-level1.yml", "name": "Level 1 (Detection)"}, {"specification": "IR-level2.yml", "name": "Level 2 (Forensics)"}, {"specification": "IR-level3.yml", "name": "Level 3 (Response)"}], "name": "Incident Response"}]}]'
+            TEST_STRING = '[{"scenarios": [{"levels": [{"range": "NIST-level1.yml", "name": "Level 1 (Easy)"}, {"range": "NIST-level2.yml", "name": "Level 2 (Medium)"}, {"range": "NIST-level3.yml", "name": "Level 3 (Hard)"}], "name": "NIST Information Security Testing and Assessment"}, {"levels": [{"range": "IR-level1.yml", "name": "Level 1 (Detection)"}, {"range": "IR-level2.yml", "name": "Level 2 (Forensics)"}, {"range": "IR-level3.yml", "name": "Level 3 (Response)"}], "name": "Incident Response"}]}]'
             print SEPARATO2
             print "TEST #3: Get training information from JSON string: %s." % (
                 TEST_STRING)

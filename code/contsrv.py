@@ -49,7 +49,10 @@ DEFAULT_CYLMS_PATH = "/home/cyuser/cylms/"
 DEFAULT_CYLMS_CONFIG = "/home/cyuser/cytrone/moodle/cylms_config"
 CYLMS_PATH = ""
 CYLMS_CONFIG = ""
-SIMULATION_DURATION = -1 # use -1 for random interval, positive value for fixed interval
+
+SIMULATION_DURATION = -1 # Use -1 for random delay, positive value for fixed delay
+SIMULATION_RAND_MIN = 1 # Minimum limit for the random delay range
+SIMULATION_RAND_MAX = 3 # Maximum limit for the random delay range
 
 # Debugging constants
 DO_DEBUG = False
@@ -146,8 +149,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 content_file.write(description_file)
                 content_file.close()
                 print "* INFO: contsrv: Saved POSTed content description to file '%s'." % (content_file_name)
-            except IOError:
-                print "* ERROR: contsrv: Could not write to file %s." % (content_file_name)
+            except IOError as error:
+                print("* ERROR: contsrv: Could not write to file {}: {}".format(content_file_name, error))
 
             print "* INFO: contsrv: Start LMS content upload."
 
@@ -188,7 +191,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 # Simulate time needed to instantiate the cyber range
                 if SIMULATION_DURATION == -1:
-                    sleep_time = random.randint(2,5)
+                    sleep_time = random.randint(SIMULATION_RAND_MIN, SIMULATION_RAND_MAX)
                 else:
                     sleep_time = SIMULATION_DURATION
                 print Storyboard.SEPARATOR3
@@ -199,7 +202,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 # Simulate the success or failure of the upload
                 random_number = random.random()
                 if random_number > 0.0:
-                    response_content = RESPONSE_SUCCESS
+                    # In case of success, we need to set the activity id to some 'harmless' value
+                    activity_id = "N/A"
+                    response_content = RESPONSE_SUCCESS_ID_PREFIX + activity_id + RESPONSE_SUCCESS_ID_SUFFIX
                 else:
                     response_content = RESPONSE_ERROR
 
@@ -240,7 +245,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             else:
                 # Simulate time needed to instantiate the cyber range
                 if SIMULATION_DURATION == -1:
-                    sleep_time = random.randint(2,5)
+                    sleep_time = random.randint(SIMULATION_RAND_MIN, SIMULATION_RAND_MAX)
                 else:
                     sleep_time = SIMULATION_DURATION
                 print Storyboard.SEPARATOR3
