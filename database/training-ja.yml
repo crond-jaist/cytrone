@@ -15,7 +15,7 @@
     levels:
       - name: レベル 1 （イージー）
         content: NIST-level1-content-ja.yml
-        specification: NIST-level1-range.yml
+        range: NIST-level1-range.yml
       - name: レベル 2 （ミディアム）[N/A]
       - name: レベル 3 （ハード）[N/A]
 

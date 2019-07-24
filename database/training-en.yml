@@ -15,7 +15,7 @@
     levels:
       - name: Level 1 (Easy)
         content: NIST-level1-content-en.yml
-        specification: NIST-level1-range.yml
+        range: NIST-level1-range.yml
       - name: Level 2 (Medium) [N/A]
       - name: Level 3 (Hard) [N/A]
 
