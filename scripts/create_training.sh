@@ -1,28 +1,40 @@
 #!/bin/bash
 
 ###########################################################
+# Create a training session in CyTrONE
+###########################################################
+
+###########################################################
 # Usage information
 
-# > ./create_training.sh [training_choice]
+# $ ./create_training.sh [training_choice]
 #
-# Note: If a training choice is provided as argument, the value will
+# NOTE: If a training choice is provided as argument, the value will
 #       be used to identify the type of session to be created;
-#       otherwise a menu with available choice will be displayed,
-#       and user input will be requested.
+#       otherwise a menu with available choice will be displayed, and
+#       user input will be requested.
 
 
 ###########################################################
-# Configure training settings
+# Load configuration
 
-TRAINING_SERVER=cytrone_host_name_or_ip
-TRAINING_PORT=8082
+: CROND_PREFIX=${CROND_PREFIX:=/home/cyuser}
+CYTRONE_SCRIPTS_CONFIG=$CROND_PREFIX/cytrone/scripts/CONFIG
 
-USER="john_doe"
-PASSWORD="john_passwd"
+if [ -f $CYTRONE_SCRIPTS_CONFIG ]; then
+        . $CYTRONE_SCRIPTS_CONFIG
+else
+    echo "create_training: ERROR: Configuration file not found: ${CYTRONE_SCRIPTS_CONFIG}"
+    exit 1
+fi
 
-# Number of cyber range instances to be created
+###########################################################
+# Prepare session information
+
+# Set default number of cyber range instances to be created
 COUNT=2
 
+# Set choice to argument, or display selection menu
 if [ $# -ge 1 ];
 then
     CHOICE=$1
@@ -47,6 +59,7 @@ else
     done
 fi
 
+# Configure parameters depending on choice
 case "${CHOICE}" in
 
 1)  LANGUAGE="en"
@@ -72,15 +85,15 @@ case "${CHOICE}" in
 5) LANGUAGE="en"
    TYPE="Scenario-Based Training"
    SCENARIO="Information Security Testing and Assessment"
-   LEVEL="Level 1 (Easy)"
+   LEVEL="Demo Level"
    ;;
 *) echo "Unrecognized choice, try again."
    ;;
 esac
 
-
 ###########################################################
 # Display training settings
+
 echo -e "# Create training using CyTrONE."
 echo -e "* Training settings:"
 echo -e "  - USER:\t${USER}"
@@ -91,7 +104,10 @@ echo -e "  - LEVEL:\t${LEVEL}"
 echo -e "  - COUNT:\t${COUNT}"
 echo -e "  - LANGUAGE:\t${LANGUAGE}"
 
-
 ###########################################################
-# Execute training creation command
-../code/trngcli.py ${TRAINING_SERVER}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=create_training&count=${COUNT}&lang=${LANGUAGE}&type=${TYPE}&scenario=${SCENARIO}&level=${LEVEL}"
+# Execute action via CyTrONE
+
+ACTION="create_training"
+../code/trngcli.py ${TRAINING_HOST}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=${ACTION}&count=${COUNT}&lang=${LANGUAGE}&type=${TYPE}&scenario=${SCENARIO}&level=${LEVEL}"
+
+exit $?

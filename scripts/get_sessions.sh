@@ -1,23 +1,27 @@
 #!/bin/bash
 
 ###########################################################
+# Get information about active sessions in CyTrONE
+###########################################################
+
+###########################################################
 # Usage information
 
-# > ./get_sessions.sh
+# $ ./get_sessions.sh
 
 
 ###########################################################
-# Configure action settings
+# Load configuration
 
-#ACTION="fetch_content"
-ACTION="get_sessions"
-#ACTION="get_configurations"
+: CROND_PREFIX=${CROND_PREFIX:=/home/cyuser}
+CYTRONE_SCRIPTS_CONFIG=$CROND_PREFIX/cytrone/scripts/CONFIG
 
-TRAINING_SERVER=cytrone_host_name_or_ip
-TRAINING_PORT=8082
-
-USER="john_doe"
-PASSWORD="john_passwd"
+if [ -f $CYTRONE_SCRIPTS_CONFIG ]; then
+        . $CYTRONE_SCRIPTS_CONFIG
+else
+    echo "get_sessions: ERROR: Configuration file not found: ${CYTRONE_SCRIPTS_CONFIG}"
+    exit 1
+fi
 
 ###########################################################
 # Display training settings
@@ -29,5 +33,9 @@ echo -e "  - PASSWORD:\t******"
 
 
 ###########################################################
-# Execute training creation command
-../code/trngcli.py ${TRAINING_SERVER}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=${ACTION}"
+# Execute action via CyTrONE
+
+ACTION="get_sessions"
+../code/trngcli.py ${TRAINING_HOST}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=${ACTION}"
+
+exit $?

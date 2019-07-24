@@ -1,43 +1,61 @@
 #!/bin/bash
 
-#################################################
-# Configure parameters
-TRAINING_HOST=172.16.1.7
-TRAINING_PORT=8082
-INSTANTIATION_HOST=172.16.1.7
-CONTENT_HOST=172.16.1.7
+###########################################################
+# Stop the CyTrONE framework
+###########################################################
 
+###########################################################
+# Usage information
+
+# $ ./stop_cytrone.sh
+
+
+###########################################################
+# Load configuration
+
+: CROND_PREFIX=${CROND_PREFIX:=/home/cyuser}
+CYTRONE_SCRIPTS_CONFIG=$CROND_PREFIX/cytrone/scripts/CONFIG
+if [ -f $CYTRONE_SCRIPTS_CONFIG ]; then
+        . $CYTRONE_SCRIPTS_CONFIG
+fi
 
 echo "# Stop CyTrONE server modules and tunnels."
 
-#################################################
+
+###########################################################
+# Stop CyTrONE
+
 # Destroy tunnels (only needed if they were created)
-echo "* Destroy the tunnel from gateway to ${TRAINING_HOST} (port ${TRAINING_PORT})."
+if ! [ x"$MANAGED_ON_GATEWAY"x = xx ]
+then
+echo "* Destroy the tunnel from gateway to ${TRAINING_HOST}."
 pkill -f tunnel_trngsrv
 if [ $? -eq 1 ];
 then
     echo "  => No tunnel matches."
 fi
+fi
 
-#################################################
-# Stop servers
+# Stop the internal server modules
 echo "* Stop the training server on ${TRAINING_HOST}."
-ssh ${TRAINING_HOST} "pkill -f cytrone_trngsrv"
+ssh ${CYTRONE_USER}@${TRAINING_HOST} "pkill -f cytrone_trngsrv"
 if [ $? -eq 1 ];
 then
     echo "  => No process matches."
 fi
 
 echo "* Stop the instantiation server on ${INSTANTIATION_HOST}."
-ssh ${INSTANTIATION_HOST} "pkill -f cytrone_instsrv"
+ssh ${CYTRONE_USER}@${INSTANTIATION_HOST} "pkill -f cytrone_instsrv"
 if [ $? -eq 1 ];
 then
     echo "  => No process matches."
 fi
 
 echo "* Stop the content server on ${CONTENT_HOST}."
-ssh ${CONTENT_HOST} "pkill -f cytrone_contsrv"
+ssh ${CYTRONE_USER}@${CONTENT_HOST} "pkill -f cytrone_contsrv"
 if [ $? -eq 1 ];
 then
     echo "  => No process matches."
 fi
+
+exit 0

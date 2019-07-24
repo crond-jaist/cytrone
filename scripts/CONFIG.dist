@@ -1,0 +1,43 @@
+
+###########################################################
+# Configuration file for CyTrONE scripts
+###########################################################
+
+# User information (for demonstration purposes only)
+USER="john_doe"
+PASSWORD="john_passwd"
+
+# Training server information
+CYTRONE_USER=cyuser
+TRAINING_HOST=172.16.1.7
+TRAINING_PORT=8082
+LOGDIR=/tmp
+CODE_DIR="$CROND_PREFIX/cytrone/code"
+SCRIPT_DIR="$CROND_PREFIX/cytrone/scripts"
+
+# Content server information
+CONTENT_HOST=172.16.1.7
+CONTENT_PORT=8084
+CYLMS_CONFIG="$CROND_PREFIX/cytrone/moodle/cylms_config"
+CYLMS_PATH="$CROND_PREFIX/cylms/"
+
+# Instantiations server information
+INSTANTIATION_HOST=172.16.1.7
+INSTANTIATION_PORT=8083
+CYRIS_PATH="$CROND_PREFIX/cyris/"
+CYPROM_PATH="$CROND_PREFIX/cyprom/"
+
+# Flag to enable the use of a gateway. If value is set to a non-empty
+# string, management scripts such as 'start_cytrone.sh' will start
+# tunnels between the gateway and the CyTrONE. Otherwise (empty or
+# unset value), such tunnel creation is skipped.
+MANAGED_ON_GATEWAY=
+
+# Gateway tunnel information
+MOODLE_PORT1=8081
+MOODLE_PORT2=8081
+MOODLE_PORT3=443
+MOODLE_TUNNEL="tunnel_moodle"
+TTY_PORT=3000
+TTY_TUNNEL="tunnel_tty"
+MOODLE_VM=moodle

@@ -1,50 +1,57 @@
 #!/bin/bash
 
 ###########################################################
+# End one or more active sessions in CyTrONE
+###########################################################
+
+###########################################################
 # Usage information
 
-# > ./end_training.sh [range_id] [range_id] ...
+# $ ./end_training.sh [session_id] [session_id] ...
 #
-# Note: If range id is provided as argument, the value will
-#       be used to identify the session to be ended,
-#       otherwise a default range id is used. Multiple range
-#       ids separated by spaces can be provided
-
-DEFAULT_RANGE_ID=1
+# NOTE: If a session id is provided as argument, the value will be
+#       used to identify the session to be ended, otherwise a default
+#       session id is used. Multiple session ids separated by spaces
+#       are accepted as arguments.
 
 
 ###########################################################
-# Configure training settings
+# Load configuration
 
-TRAINING_SERVER=cytrone_host_name_or_ip
-TRAINING_PORT=8082
+: CROND_PREFIX=${CROND_PREFIX:=/home/cyuser}
+CYTRONE_SCRIPTS_CONFIG=$CROND_PREFIX/cytrone/scripts/CONFIG
 
-USER="john_doe"
-PASSWORD="john_passwd"
-
-if [ $# -ge 1 ];
-then
-    RANGE_IDS="$@"
+if [ -f $CYTRONE_SCRIPTS_CONFIG ]; then
+        . $CYTRONE_SCRIPTS_CONFIG
 else
-    RANGE_IDS=${DEFAULT_RANGE_ID}
+    echo "end_training: ERROR: Configuration file not found: ${CYTRONE_SCRIPTS_CONFIG}"
+    exit 1
 fi
 
-for range_id in ${RANGE_IDS}
+# Use default session id if necessary
+DEFAULT_SESSION_ID=1
+if [ $# -ge 1 ];
+then
+    SESSION_IDS="$@"
+else
+    SESSION_IDS=${DEFAULT_SESSION_ID}
+fi
+
+###########################################################
+# Process each session based on its id
+
+for session_id in ${SESSION_IDS}
 do
-
-    ###########################################################
     # Display training settings
-
     echo -e "# End training using CyTrONE."
     echo -e "* Training settings:"
     echo -e "  - USER:\t${USER}"
     echo -e "  - PASSWORD:\t******"
-    echo -e "  - RANGE_ID:\t${range_id}"
+    echo -e "  - SESSION_ID:\t${session_id}"
 
-
-    ###########################################################
-    # Execute end training command (in the background)
-    ../code/trngcli.py ${TRAINING_SERVER}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=end_training&range_id=${range_id}" &
+    # Execute action via CyTrONE (in the background)
+    ACTION="end_training"
+    ../code/trngcli.py ${TRAINING_HOST}:${TRAINING_PORT} "user=${USER}&password=${PASSWORD}&action=${ACTION}&range_id=${session_id}" &
 
 done
 
