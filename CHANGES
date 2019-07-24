@@ -1,4 +1,26 @@
 
+CyTrONE v1.1
+------------
+* Added internal support for the CyPROM scenario progression
+  management module
+* Added "progression" as new key that denotes the CyPROM progression
+  scenario location in the scenario information section of the
+  training information file
+* Added "range" as new recommended key for denoting the training
+  environment specification in the scenario information section (the
+  previous key, "specification", is still recognized, but is now
+  considered obsolete)
+* Introduced a configuration file in the 'scripts/' directory, and
+  revised the management scripts to use this file, thus simplifying
+  the procedure of customizing the CyTrONE installation
+* Added support for storing execution log files when CyTrONE is
+  started; the default location, the '/tmp' directory, can be changed
+  via the configuration file mentioned above
+* Addded the new helper script 'scripts/get_notification.sh' for
+  retrieving the cyber range connection information at any moment for
+  any of the active training sessions
+* Minor bug fixes and improvements
+
 CyTrONE v1.0
 ------------
 * Added support for HTTPS communication and password-based
@@ -8,8 +30,8 @@ CyTrONE v1.0
 * Removed the upper bound of 5 concurrent training sessions caused by
   limitations in the previous version of CyLMS
 * Revised and updated the training content
-* Included a new simplified configuration file suitable for the latest
-  CyLMS release
+* Included a new simplified sample configuration file for CyLMS
+  suitable for the latest CyLMS release
 
 CyTrONE v0.2
 ------------
