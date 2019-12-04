@@ -836,8 +836,7 @@ def main(argv):
         # Use SSL socket if HTTPS is enabled
         if Storyboard.ENABLE_HTTPS:
             print("* INFO: trngsrv: HTTPS is enabled => set up SSL socket")
-            #server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt", ca_certs=None, server_side=True)
-            server.socket = ssl.wrap_socket (server.socket, keyfile="crond-gw.jaist.ac.jp.key", certfile="crond-gw.jaist.ac.jp.cer", ca_certs="nii-odca3sha1.cer", server_side=True)
+            server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt", ca_certs=None, server_side=True)
 
         # Start web server
         print "* INFO: trngsrv: CyTrONE training server listens on %s:%d%s." % (
