@@ -27,9 +27,10 @@ provide the answers via the LMS.
 While the CyTrONE distribution already includes some sample training
 content to get you started, we have also started releasing
 independently more training content via the [CROND web
-page](https://www.jaist.ac.jp/misc/crond/index-en.html). This
-additional content currently consists of a set of CTF (Capture The
-Flag) style training questions.
+page](https://www.jaist.ac.jp/misc/crond/achievements-en.html). This
+additional content comprises a set of CTF (Capture The Flag) style
+questions, as well as a set of questions inspired by the NIST
+"Technical Guide to Information Security Testing and Assessment".
 
 Next we provide brief information on the prerequisites for running
 CyTrONE, and on how to setup and use the framework. For details,
