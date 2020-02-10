@@ -25,8 +25,8 @@ provide the answers via the LMS.
 ![CyTrONE Overview](https://github.com/crond-jaist/cytrone/blob/master/cytrone_overview.png)
 
 While the CyTrONE distribution already includes some sample training
-content to get you started, we have also started releasing
-independently more training content via the [CROND web
+content to get you started, we are also releasing independently more
+training content via the [CROND web
 page](https://www.jaist.ac.jp/misc/crond/achievements-en.html). This
 additional content comprises a set of CTF (Capture The Flag) style
 questions, as well as a set of questions inspired by the NIST
