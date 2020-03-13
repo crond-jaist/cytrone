@@ -93,7 +93,7 @@ these requirements are shared with CyLMS and CyRIS):
 
 Assuming that the entire CyTrONE framework was set up, either via the
 [install
-script](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696),
+script](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696)
 or manually, the following are the basic steps necessary to use it:
 
 1. Start the execution of the CyTrONE framework.
