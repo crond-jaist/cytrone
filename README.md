@@ -32,11 +32,15 @@ additional content comprises a set of CTF (Capture The Flag) style
 questions, as well as a set of questions inspired by the NIST
 "Technical Guide to Information Security Testing and Assessment".
 
-Next we provide brief information on the prerequisites for running
-CyTrONE, and on how to setup and use the framework. For details,
-please refer to the User Guide made available on the
-[releases](https://github.com/crond-jaist/cytrone/releases) page,
-which also includes the latest stable version of the software.
+We have prepared a script that can be used to install the entire
+CyTrONE framework, including its main components CyRIS and CyLMS and
+the Moodle VM, on one host; the script is available
+[here](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696). Alternatively,
+please refer to the next information on the prerequisites for running
+CyTrONE, and on how to setup and use the framework. More details about
+CyTrONE are available in the User Guide published on the
+[releases](https://github.com/crond-jaist/cytrone/releases) page that
+also includes the latest stable version of the software.
 
 
 ## Prerequisites
@@ -51,6 +55,9 @@ The following steps must be carried out _before_ using CyTrONE:
 * Install the **CyRIS** cyber range instantiation system on the hosts
   used for cyber range creation by referring to the CyRIS User Guide:
   https://github.com/crond-jaist/cyris/
+
+The following optional components can also be installed (note that
+they are not yet included in the install script mentioned above):
 * Install the **CyPROM** scenario progression management module, also
   on the hosts used for cyber range creation, by referring to the
   CyPROM User Guide: https://github.com/crond-jaist/cyprom/
