@@ -32,12 +32,12 @@ additional content comprises a set of CTF (Capture The Flag) style
 questions, as well as a set of questions inspired by the NIST
 "Technical Guide to Information Security Testing and Assessment".
 
-We have prepared a script that can be used to install the entire
-CyTrONE framework, including its main components CyRIS and CyLMS and
-the Moodle VM, on one host; the script is available
+We have prepared an install script that can be used to set up the
+entire CyTrONE framework, including CyRIS, CyLMS and the Moodle VM, on
+one host; the install script is available
 [here](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696). Alternatively,
 please refer to the next information on the prerequisites for running
-CyTrONE, and on how to setup and use the framework. More details about
+CyTrONE, and on how to set up and use the framework. More details about
 CyTrONE are available in the User Guide published on the
 [releases](https://github.com/crond-jaist/cytrone/releases) page that
 also includes the latest stable version of the software.
@@ -45,7 +45,8 @@ also includes the latest stable version of the software.
 
 ## Prerequisites
 
-The following steps must be carried out _before_ using CyTrONE:
+If manual setup is prefered, such as in the case of employing multiple
+hosts, the following steps must be carried out _before_ using CyTrONE:
 * Install the **Moodle** LMS on the host used as training content
   server by referring to the relevant documentation for details:
   https://moodle.org/
@@ -68,7 +69,7 @@ they are not yet included in the install script mentioned above):
 
 ## Setup
 
-To setup CyTrONE, follow the steps below:
+To set up CyTrONE manually, follow the steps below:
 1. Download the archive of the latest stable version of the CyTrONE
 source code from the
 [releases](https://github.com/crond-jaist/cytrone/releases) page
@@ -90,7 +91,10 @@ these requirements are shared with CyLMS and CyRIS):
 
 ## Quick Start
 
-We provide next the basic steps necessary for using CyTrONE:
+Assuming that the entire CyTrONE framework was set up, either via the
+[install
+script](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696),
+or manually, the following are the basic steps necessary to use it:
 
 1. Start the execution of the CyTrONE framework.
 
