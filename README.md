@@ -37,7 +37,7 @@ CyTrONE framework, including CyRIS, CyLMS, CyPROM and the Moodle VM,
 on a single host. Due to specific differences, separate versions of
 the script are available for the [Ubuntu 16.04
 LTS](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696)
-and Ubuntu 18.04
+and [Ubuntu 18.04
 LTS](https://gist.github.com/crond-jaist/592e5d3f92aaf4cf4e53b341a9d6d3cc)
 host operating systems. Alternatively, please refer to the next
 information on the prerequisites for running CyTrONE, and on how to
