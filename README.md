@@ -32,13 +32,17 @@ additional content comprises a set of CTF (Capture The Flag) style
 questions, as well as a set of questions inspired by the NIST
 "Technical Guide to Information Security Testing and Assessment".
 
-We have prepared an install script that can be used to set up the
-entire CyTrONE framework, including CyRIS, CyLMS and the Moodle VM, on
-one host; the install script is available
-[here](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696). Alternatively,
-please refer to the next information on the prerequisites for running
-CyTrONE, and on how to set up and use the framework. More details about
-CyTrONE are available in the User Guide published on the
+We have prepared install scripts that can be used to set up the entire
+CyTrONE framework, including CyRIS, CyLMS, CyPROM and the Moodle VM,
+on a single host. Due to specific differences, separate versions of
+the script are available for the [Ubuntu 16.04
+LTS](https://gist.github.com/crond-jaist/0f3af8bc31928fc3c03afdbf5c5d3696)
+and Ubuntu 18.04
+LTS](https://gist.github.com/crond-jaist/592e5d3f92aaf4cf4e53b341a9d6d3cc)
+host operating systems. Alternatively, please refer to the next
+information on the prerequisites for running CyTrONE, and on how to
+set up and use the framework. More details about CyTrONE are available
+in the User Guide published on the
 [releases](https://github.com/crond-jaist/cytrone/releases) page that
 also includes the latest stable version of the software.
 
