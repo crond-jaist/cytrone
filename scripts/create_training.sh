@@ -65,22 +65,22 @@ case "${CHOICE}" in
 1)  LANGUAGE="en"
     TYPE="Scenario-Based Training"
     SCENARIO="Information Security Testing and Assessment"
-    LEVEL="Level 1 (Easy)"
+    LEVEL="Level 1"
     ;;
 2)  LANGUAGE="en"
     TYPE="Scenario-Based Training"
     SCENARIO="Information Security Testing and Assessment"
-    LEVEL="Level 2 (Medium)"
+    LEVEL="Level 2"
     ;;
 3)  LANGUAGE="ja"
     TYPE="シナリオに基づいた演習"
     SCENARIO="情報セキュリティテスト＆評価"
-    LEVEL="レベル 1 （イージー）"
+    LEVEL="レベル 1"
     ;;
 4) LANGUAGE="ja"
    TYPE="シナリオに基づいた演習"
    SCENARIO="情報セキュリティテスト＆評価"
-   LEVEL="レベル 2 （ミディアム）"
+   LEVEL="レベル 2"
    ;;
 5) LANGUAGE="en"
    TYPE="Scenario-Based Training"
