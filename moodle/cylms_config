@@ -3,3 +3,5 @@ lms_host = root@192.168.122.232
 lms_repository = /var/moodledata/repository/training_content/
 course_name = CyTrONE Training
 section_id = 0
+enable_vnc = false
+range_directory = /home/cyuser/cyris/cyber_range
