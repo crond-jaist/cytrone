@@ -1,4 +1,13 @@
 
+CyTrONE v1.2
+------------
+* Updated configuration file to match the most recent CyLMS version
+* Revised database files and updated them to match the most recent
+  CyRIS version
+* Added information in README.md about the installation scripts for
+  Ubuntu 16.04 LTS and Ubuntu 18.04 LTS host operating systems that we
+  now make available as GitHub gists
+
 CyTrONE v1.1
 ------------
 * Added internal support for the CyPROM scenario progression
