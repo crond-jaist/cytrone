@@ -9,19 +9,11 @@
 # Description of the scenarios available in the training database
 - scenarios:
 
-  # Scenario based on the US National Institute of Standards and Technology
-  # (NIST) Guide on Information Security Testing and Assessment
+  # Content inspired by the U.S. NIST "Technical Guide to Information
+  # Security Testing and Assessment"
   - name: Information Security Testing and Assessment
     levels:
-      - name: Level 1 (Easy)
+      - name: Level 1
         content: NIST-level1-content-en.yml
         range: NIST-level1-range.yml
-      - name: Level 2 (Medium) [N/A]
-      - name: Level 3 (Hard) [N/A]
-
-  # Scenario based on general guidelines for incident response
-  - name: Incident Detection and Response [N/A]
-    levels:
-      - name: Level 1 (Detection) [N/A]
-      - name: Level 2 (Forensics) [N/A]
-      - name: Level 3 (Response) [N/A]
+      - name: Level 2 [N/A]

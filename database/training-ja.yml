@@ -9,19 +9,11 @@
 # Description of the scenarios available in the training database
 - scenarios:
 
-  # Scenario based on the US National Institute of Standards and Technology
-  # (NIST) Guide on Information Security Testing and Assessment
+  # Content inspired by the U.S. NIST "Technical Guide to Information
+  # Security Testing and Assessment"
   - name: 情報セキュリティテスト＆評価
     levels:
-      - name: レベル 1 （イージー）
+      - name: レベル 1
         content: NIST-level1-content-ja.yml
         range: NIST-level1-range.yml
-      - name: レベル 2 （ミディアム）[N/A]
-      - name: レベル 3 （ハード）[N/A]
-
-  # Scenario based on general guidelines for incident response
-  - name: インシデント検出＆レスポンス [N/A]
-    levels:
-      - name: レベル 1（検出）[N/A]
-      - name: レベル 2（捜査）[N/A]
-      - name: レベル 3（対応）[N/A]
+      - name: レベル 2 [N/A]

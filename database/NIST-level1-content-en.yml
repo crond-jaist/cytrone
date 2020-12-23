@@ -1,10 +1,10 @@
 ---
 - training:
-  - id: L1-EN
+  - id: NIST-L1-EN
     title: Investigate the security of a desktop computer
-    overview: |
+    overview: >
       <p>Today is your first day on the job as a sysadmin. Your boss tells you that he suspects somebody tried to hack into your company's network, and asks you to investigate a possible cyberattack that may have happened when the system administrator was a guy called Daniel Craig. The boss sits you in front of the previous sysadmin's computer, and wishes you good luck.</p>
-      <p>You glance at the machine and reluctantly get to work.<p>
+      <p>You glance at the machine and reluctantly get to work.</p>
     level: 1
 
     questions:
