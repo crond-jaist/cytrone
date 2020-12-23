@@ -255,6 +255,14 @@ class SessionInfo:
                 return True
 
         return False
+    # Remove a session with the corresponding parameters
+    def remove_session_variation(self, cyber_range_id, user_id,activity_id):
+        for session in self.sessions:
+            if session.sess_id == cyber_range_id and session.user_id == user_id and session.activity_id == activity_id:
+                self.sessions.remove(session)
+                return True
+
+        return False
 
     # Build a list of active session ids
     def get_id_list_int(self):
@@ -292,7 +300,18 @@ class SessionInfo:
                 return session.activity_id
 
         return None
-    
+
+    # Get the activity id for a session with given id and a specified user
+    def get_activity_id_list(self, cyber_range_id, user_id):
+        activity_list=[]
+        for session in self.sessions:
+            if session.sess_id == cyber_range_id and session.user_id == user_id:
+                activity_list.append(session.activity_id)
+        if activity_list is None:
+            return None
+        else:
+            return activity_list
+
     # Store session information in a YAML file
     def write_YAML_file(self, yaml_file_name):
 

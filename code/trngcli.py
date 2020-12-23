@@ -134,6 +134,17 @@ try:
             print urllib.unquote(message).rstrip()
             print SEPARATOR
 
+    elif action == query.Parameters.CREATE_TRAINING_Variation:
+        logging.info("Training server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing training session creation information... ")
+            print SEPARATOR
+            # We use rstrip() to remove trailing end of line etc.
+            print urllib.unquote(message).rstrip()
+            print SEPARATOR
+
     elif action == query.Parameters.GET_CONFIGURATIONS:
         logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
@@ -173,7 +184,75 @@ try:
             print SEPARATOR
             print message
             print SEPARATOR
+    elif action == query.Parameters.END_TRAINING_Variation:
+        logging.info("Training server action '{0}' done => {1}.".format(action, status))
 
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing training session termination information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_NOTIFICATION:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range notification information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_DETAILS:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range details information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_ENTRY_POINT:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range entry_point information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_CREATION_STATUS:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range entry_point information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_INITIF:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range initif information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
+
+    elif action == query.Parameters.GET_CR_CREATION_LOG:
+        logging.info("Instantiation server action '{0}' done => {1}.".format(action, status))
+
+        # Display message if any (including in case of error)
+        if message:
+            logging.info("Showing cyber range creation_log information... ")
+            print SEPARATOR
+            print message
+            print SEPARATOR
 
     # Handle instantiation server actions
     elif action == query.Parameters.INSTANTIATE_RANGE:        

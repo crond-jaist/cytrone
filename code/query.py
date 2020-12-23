@@ -37,12 +37,20 @@ class Parameters:
 
     FETCH_CONTENT = "fetch_content"         # Training server
     CREATE_TRAINING = "create_training"
+    CREATE_TRAINING_Variation = "create_training_variation"
+    END_TRAINING_Variation = "end_training_variation"
     GET_CONFIGURATIONS = "get_configurations"
     GET_SESSIONS = "get_sessions"
     END_TRAINING = "end_training"
 
     INSTANTIATE_RANGE = "instantiate_range" # Instantiation server
     DESTROY_RANGE = "destroy_range"
+    GET_CR_NOTIFICATION = "get_cr_notification"
+    GET_CR_DETAILS = "get_cr_details"
+    GET_CR_ENTRY_POINT = "get_cr_entry_point"
+    GET_CR_CREATION_STATUS = "get_cr_creation_status"
+    GET_CR_INITIF = "get_cr_initif"
+    GET_CR_CREATION_LOG = "get_cr_creation_log"
 
     UPLOAD_CONTENT = "upload_content"       # Content server
     REMOVE_CONTENT = "remove_content"

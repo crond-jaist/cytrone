@@ -14,6 +14,11 @@ import sys
 import getopt
 from SocketServer import ThreadingMixIn
 import threading
+from string import Template
+import yaml
+import logging
+import re
+import os
 
 # Internal imports
 import userinfo
@@ -68,7 +73,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                      query.Parameters.CREATE_TRAINING,
                      query.Parameters.GET_CONFIGURATIONS,
                      query.Parameters.GET_SESSIONS,
-                     query.Parameters.END_TRAINING]
+                     query.Parameters.END_TRAINING,
+                     query.Parameters.CREATE_TRAINING_Variation,
+                     query.Parameters.GET_CR_CREATION_LOG,
+                     query.Parameters.END_TRAINING_Variation]
 
     # List of valid languages recognized by the training server
     VALID_LANGUAGES = [query.Parameters.EN,
@@ -177,6 +185,22 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Check if the given range id (as string) is already used
         if session_info.is_session_id_user(range_id, user_id):
             return session_info.get_activity_id(range_id, user_id)
+        else:
+            return None
+
+    #########################################################################
+    # Check whether a range with the given id is active for the
+    # specified user_id;
+    # Return the activity id if session was found, None otherwise
+    # Note: Requires synchronization for active sessions list
+    def check_range_id_and_activity_id_exists(self, range_id, user_id):
+        # Read current session info
+        session_info = sessinfo.SessionInfo()
+        session_info.parse_YAML_file(ACTIVE_SESSIONS_FILE)
+
+        # Check if the given range id (as string) is already used
+        if session_info.is_session_id_user(range_id, user_id):
+            return session_info.get_activity_id_list(range_id, user_id)
         else:
             return None
 
@@ -313,7 +337,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             response_data = training_info.get_JSON_representation()
 
         ####################################################################
-        # Create training action
+        # Original Create training action
         # Note: Requires synchronized access to active sessions list
         elif action == query.Parameters.CREATE_TRAINING:
 
@@ -535,6 +559,348 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
 
         ####################################################################
+        # Create training action
+        # Note: Requires synchronized access to active sessions list
+        elif action == query.Parameters.CREATE_TRAINING_Variation:
+
+            if not instance_count:
+                self.respond_error(Storyboard.INSTANCE_COUNT_MISSING_ERROR)
+                return
+
+            try:
+                instance_count_value = int(instance_count)
+            except ValueError as error:
+                self.respond_error(Storyboard.INSTANCE_COUNT_INVALID_ERROR)
+                return
+
+            if not ttype:
+                self.respond_error(Storyboard.TRAINING_TYPE_MISSING_ERROR)
+                return
+
+            if not scenario:
+                self.respond_error(Storyboard.SCENARIO_NAME_MISSING_ERROR)
+                return
+
+            if not level:
+                self.respond_error(Storyboard.LEVEL_NAME_MISSING_ERROR)
+                return
+
+            # Synchronize access to active sessions list and related variables
+            self.lock_active_sessions.acquire()
+            try:
+                cyber_range_id = self.generate_cyber_range_id(self.pending_sessions)
+                if cyber_range_id:
+                    # Convert to string for internal representation
+                    cyber_range_id = str(cyber_range_id)
+                    self.pending_sessions.append(cyber_range_id)
+                    print "* INFO: trngsrv: Allocated session with ID #%s." % (cyber_range_id)
+                else:
+                    self.respond_error(Storyboard.SESSION_ALLOCATION_ERROR)
+                    return
+            finally:
+                self.lock_active_sessions.release()
+
+            ########################################
+            # Handle instantiation
+            spec_file_name = training_info.get_range_file_name(scenario, level)
+            if spec_file_name == None:
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.TEMPLATE_IDENTIFICATION_ERROR)
+                return
+
+            spec_file_name = DATABASE_DIR + spec_file_name
+
+            if DEBUG:
+                print "* DEBUG: trngsrv: Scenario specification file: %s" % (spec_file_name)
+
+            # Open the specification file (template)
+            try:
+                spec_file = open(spec_file_name, "r")
+                spec_file_content = spec_file.read()
+                spec_file.close()
+
+            except IOError as error:
+                print "* ERROR: trngsrv: File error: %s." % (error)
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.TEMPLATE_LOADING_ERROR)
+                return
+
+            # Do instantiation
+            try:
+                # Replace variables in the specification file
+                spec_file_content = user_obj.replace_variables(spec_file_content, cyber_range_id, instance_count_value)
+
+                # Note: creating a dictionary as below does not
+                # preserve the order of the parameters, but this has
+                # no negative influence in our implementation
+                query_tuples = {
+                    query.Parameters.USER: user_id,
+                    query.Parameters.ACTION: query.Parameters.INSTANTIATE_RANGE,
+                    query.Parameters.DESCRIPTION_FILE: spec_file_content,
+                    query.Parameters.RANGE_ID: cyber_range_id
+                }
+
+                query_params = urllib.urlencode(query_tuples)
+                print "* INFO: trngsrv: Send instantiate request to instantiation server %s." % (INSTANTIATION_SERVER_URL)
+                if DEBUG:
+                    print "* DEBUG: trngsrv: POST parameters: %s" % (query_params)
+                data_stream = urllib.urlopen(INSTANTIATION_SERVER_URL, query_params)
+                data=None
+                data = data_stream.read()
+                query_result = None
+                query_result = data_stream.read()
+                if DEBUG:
+                    print "* DEBUG: trngsrv: Instantiation server response body: %s" % (data)
+                    print "* DEBUG: trngsrv: Instantiation server response query_result: %s" % (query_result)
+
+                # Remove pending session
+                self.removePendingSession(cyber_range_id)
+
+                (status, message) = query.Response.parse_server_response(data)
+
+                if DEBUG:
+                    print "* DEBUG: trngsrv: Response status:", status
+                    print "* DEBUG: trngsrv: Response message:", message
+
+                if status == Storyboard.SERVER_STATUS_SUCCESS:
+                    pass
+                else:
+                    print "* ERROR: trngsrv: Range instantiation error."
+                    self.respond_error(Storyboard.INSTANTIATION_ERROR)
+                    return
+
+                # Save the response data
+                instsrv_response = data
+
+            except IOError as error:
+                print "* ERROR: trngsrv: URL error: %s." % (error)
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.INSTANTIATION_SERVER_ERROR)
+                return
+            ########################################
+            # Handle GET_CR_CREATION_LOG
+            try:
+                # Note: creating a dictionary as below does not
+                # preserve the order of the parameters, but this has
+                # no negative influence in our implementation
+                query_tuples = {
+                    query.Parameters.USER: user_id,
+                    query.Parameters.ACTION: query.Parameters.GET_CR_CREATION_LOG,
+                    query.Parameters.RANGE_ID: cyber_range_id
+                }
+
+                query_params = urllib.urlencode(query_tuples)
+                print "* INFO: trngsrv: Send instantiate request to instantiation server %s." % (INSTANTIATION_SERVER_URL)
+                if DEBUG:
+                    print "* DEBUG: trngsrv: POST parameters: %s" % (query_params)
+                data_stream = urllib.urlopen(INSTANTIATION_SERVER_URL, query_params)
+                query_result = None
+                query_result = data_stream.read()
+                if DEBUG:
+                    print "* DEBUG: trngsrv: Instantiation server response body: %s" % (query_result)
+
+                #############################################################################
+                # Start parse GET_CR_CREATION_LOG & store "exec-result:"
+                # meta_answer_dic :
+                # {1: [
+                #       {'desktop,1,eth_ip': '1.1.1.2'},
+                #       {'desktop,1,whoami': 'root'}
+                #     ],
+                # 2: [
+                #       {'desktop,1,eth_ip': '1.2.1.2'},
+                #       {'desktop,1,whoami': 'root'}
+                #    ]
+                # }
+                #############################################################################
+                creation_log_content = query_result
+                if (creation_log_content[0]=="[" )& \
+                        (creation_log_content[1]=="{" )& \
+                        (creation_log_content[(len(creation_log_content)-2)]=="}" )& \
+                        (creation_log_content[(len(creation_log_content)-1)]=="]"):
+                    creation_log_content=creation_log_content[2:]
+                    creation_log_content=creation_log_content[:-2]
+                (status,creation_log_message)=creation_log_content.split(',')
+                (tag,body)=creation_log_message.split(':')
+                decode_mesage=urllib.unquote(body)
+                decode_mesage=decode_mesage.split("\n")
+                result_list=[]
+                for lines in decode_mesage :
+                    if 'exec-result:' in lines:
+                        result_list.append(lines.replace("exec-result: ", ""))
+                all_result = []
+                for instnum,result in enumerate(result_list):
+                    tag,ans = result.split()
+                    ans=urllib.unquote(ans)
+                    ans=ans.replace("\n", "")
+                    ins,guest,num,var=tag.split(",")
+                    ins_num=ins.replace("ins", "")
+                    user_def = guest+','+num+','+var
+                    all_result.append({int(ins_num):{user_def:ans}})
+                meta_answer_dic={}
+                for inst in all_result:
+                    for i in inst:
+                        try:
+                            meta_answer_dic[i].append(inst[i])
+                        except:
+                            meta_answer_dic[i]=[inst[i]]
+                #############################################################################
+                # End parse GET_CR_CREATION_LOG & store "exec-result:"
+                #############################################################################
+
+            except IOError as error:
+                print "* ERROR: trngsrv: File error: %s." % (error)
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.CONTENT_LOADING_ERROR)
+                return
+
+            ########################################
+            # Handle content upload
+            content_file_name = training_info.get_content_file_name(scenario, level)
+            if content_file_name == None:
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.CONTENT_IDENTIFICATION_ERROR)
+                return
+
+            content_file_name = DATABASE_DIR + content_file_name
+
+            if DEBUG:
+                print "* DEBUG: trngsrv: Training content file: %s" % (content_file_name)
+
+            # Open the content file
+            try:
+                content_file = open(content_file_name, "r")
+                content_file_content = content_file.read()
+                content_file.close()
+
+            except IOError as error:
+                print "* ERROR: trngsrv: File error: %s." % (error)
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.CONTENT_LOADING_ERROR)
+                return
+
+            #############################################################################
+            # Loop for meta_answer
+            #############################################################################
+            # test code for New syntax as meta_answer by rive3
+            try:
+                for inst in range(instance_count_value):
+                    meta_answers={}
+                    for meta_answer_par_inst in meta_answer_dic[inst+1]:
+                        meta_answers.update(meta_answer_par_inst)
+                    content_template=Meta_answer_template(content_file_content)
+                    if DEBUG:
+                        print meta_answers
+                    patched_content=content_template.safe_substitute(meta_answers)
+                    content_list = yaml.load(patched_content)
+                    try:
+                        #change 2 dic type
+                        for i in content_list:
+                            if type(i) != dict:
+                                logging.error("Incorrect format")
+                            for j in i:
+                                #top level tag (training)
+                                for k in i[j]:
+                                    # training section
+                                    for quest in k["questions"]:
+                                        # search keys
+                                        for keys in list(quest):
+                                            if(keys=="meta_answer"):
+                                                try:
+                                                    del quest["answer"]
+                                                except:
+                                                    pass
+                                                finally:
+                                                    quest["answer"]=quest["meta_answer"]
+                                                del quest["meta_answer"]
+
+                    except (IOError, yaml.YAMLError) as e:
+                        logging.error("General error: " + str(e))
+                        self.removePendingSession(cyber_range_id)
+                        self.respond_error(Storyboard.INSTANTIATION_SERVER_ERROR)
+                        return
+                    content_file_description=yaml.dump(content_list, default_flow_style=False)
+                    try:
+                        # Note: creating a dictionary as below does not
+                        # preserve the order of the parameters, but this has
+                        # no negative influence in our implementation
+                        query_tuples = {
+                            query.Parameters.USER: user_id,
+                            query.Parameters.ACTION: query.Parameters.UPLOAD_CONTENT,
+                            query.Parameters.DESCRIPTION_FILE: content_file_description,
+                            query.Parameters.RANGE_ID: cyber_range_id
+                        }
+
+                        query_params = urllib.urlencode(query_tuples)
+                        print "* INFO: trngsrv: Send upload request to content server %s." % (CONTENT_SERVER_URL)
+                        if DEBUG:
+                            print "* DEBUG: trngsrv: POST parameters: %s" % (query_params)
+                        data_stream = urllib.urlopen(CONTENT_SERVER_URL, query_params)
+                        data = None
+                        data = data_stream.read()
+                        if DEBUG:
+                            print "* DEBUG: trngsrv: Content server response body: %s" % (data)
+
+                        (status, activity_id) = query.Response.parse_server_response(data)
+
+                        if DEBUG:
+                            print("* DEBUG: trngsrv: Response status: {}".format(status))
+                            print("* DEBUG: trngsrv: Response activity_id: {}".format(activity_id))
+
+                        if status == Storyboard.SERVER_STATUS_SUCCESS:
+                            # Store activity id in session description
+                            session_name = "Training Session #%s" % (cyber_range_id)
+                            crt_time = time.asctime()
+                            print "* INFO: trngsrv: Instantiation successful => save training session: %s (time: %s)." % (session_name, crt_time)
+
+                            # Synchronize access to active sessions list
+                            self.lock_active_sessions.acquire()
+                            try:
+                                # Read session info
+                                session_info = sessinfo.SessionInfo()
+                                session_info.parse_YAML_file(ACTIVE_SESSIONS_FILE)
+
+                                # Add new session and save to file
+                                # Scenarios and levels should be given as arrays,
+                                # so we convert values to arrays when passing arguments
+                                session_info.add_session(session_name, cyber_range_id, user_id,
+                                                         crt_time, ttype, [scenario], [level],
+                                                         language, instance_count, activity_id)
+                                session_info.write_YAML_file(ACTIVE_SESSIONS_FILE)
+                            finally:
+                                self.lock_active_sessions.release()
+                                #pass
+                        else:
+                            print "* ERROR: trngsrv: Content upload error."
+                            self.removePendingSession(cyber_range_id)
+                            self.respond_error(Storyboard.CONTENT_UPLOAD_ERROR)
+                            return
+
+                        # Save the response data
+                        contsrv_response = data
+
+                        if DEBUG:
+                            print "* DEBUG: trngsrv: contsrv response: %s" %(contsrv_response)
+                            print "* DEBUG: trngsrv: instsrv response: %s" %(instsrv_response)
+
+                        # Prepare the response as a message
+                        # TODO: Should create a function to handle this
+                        if message:
+                            response_data = '[{{"{0}": "{1}"}}]'.format(Storyboard.SERVER_MESSAGE_KEY, message)
+                        else:
+                            response_data = None
+
+                    except IOError as error:
+                        print "* ERROR: trngsrv: URL error: %s." % (error)
+                        self.removePendingSession(cyber_range_id)
+                        self.respond_error(Storyboard.CONTENT_SERVER_ERROR)
+                        return
+            except Exception as e:
+                print "* ERROR: trngsrv: loop error: %s." % (e)
+                self.removePendingSession(cyber_range_id)
+                self.respond_error(Storyboard.CONTENT_SERVER_ERROR)
+                return
+
+        ####################################################################
         # Retrieve saved training configurations action
         # Note: Requires synchronized access to saved configurations list
         elif action == query.Parameters.GET_CONFIGURATIONS: 
@@ -572,6 +938,126 @@ class RequestHandler(BaseHTTPRequestHandler):
             # representation that will be provided to the client
             response_data = session_info.get_JSON_representation(user_id)
 
+        ####################################################################
+        # End training variation action
+        # Note: Requires synchronized access to active sessions list
+        elif action == query.Parameters.END_TRAINING_Variation:
+
+            if not range_id:
+                print "* ERROR: trngsrv: %s." % (Storyboard.SESSION_ID_MISSING_ERROR)
+                self.respond_error(Storyboard.SESSION_ID_MISSING_ERROR)
+                return
+            activity_id = None
+            self.lock_active_sessions.acquire()
+            try:
+                 activity_id = self.check_range_id_exists(range_id, user_id)
+                 activity_id_list = self.check_range_id_and_activity_id_exists(range_id, user_id)
+                 if not activity_id:
+                     print "* ERROR: trngsrv: Session with ID "+ range_id + " doesn't exist for user " + user_id
+                     error_msg = Storyboard.SESSION_ID_INVALID_ERROR + ": " + range_id
+                     self.respond_error(error_msg)
+                     return
+            finally:
+                self.lock_active_sessions.release()
+                ########################################
+            # Handle content removal
+            for aclist in activity_id_list:
+                try:
+                    # Note: Creating a dictionary as below does not
+                    # preserve the order of the parameters, but this has
+                    # no negative influence in our implementation
+                    query_tuples = {
+                        query.Parameters.USER: user_id,
+                        query.Parameters.ACTION: query.Parameters.REMOVE_CONTENT,
+                        query.Parameters.RANGE_ID: range_id,
+                        query.Parameters.ACTIVITY_ID: aclist
+                    }
+
+                    query_params = urllib.urlencode(query_tuples)
+                    print "* INFO: trngsrv: Send removal request to content server %s." % (CONTENT_SERVER_URL)
+                    print "* INFO: trngsrv: POST parameters: %s" % (query_params)
+                    data_stream = urllib.urlopen(CONTENT_SERVER_URL, query_params)
+                    data = data_stream.read()
+                    if DEBUG:
+                        print "* DEBUG: trngsrv: Content server response body: %s" % (data)
+
+                    # We don't parse the response since the content server does not provide
+                    # a uniformly formatted one; instead we only check for SUCCESS key
+                    if Storyboard.SERVER_STATUS_SUCCESS in data:
+                        # Nothing to do on success as there is no additional info provided
+                        pass
+                    else:
+                        print "* ERROR: trngsrv: Content removal error."
+                        self.respond_error(Storyboard.CONTENT_REMOVAL_ERROR)
+                        return
+
+                    # Save the response data
+                    contsrv_response = data
+
+                except IOError as error:
+                    print "* ERROR: trngsrv: URL error: %s." % (error)
+                    self.respond_error(Storyboard.CONTENT_SERVER_ERROR)
+                    return
+
+            ########################################
+            # Handle range destruction
+            try:
+                # Note: creating a dictionary as below does not
+                # preserve the order of the parameters, but this has
+                # no negative influence in our implementation
+                query_tuples = {
+                    query.Parameters.USER: user_id,
+                    query.Parameters.ACTION: query.Parameters.DESTROY_RANGE,
+                    query.Parameters.RANGE_ID: range_id
+                }
+
+                query_params = urllib.urlencode(query_tuples)
+                print "* INFO: trngsrv: Send destroy request to instantiation server %s." % (INSTANTIATION_SERVER_URL)
+                print "* INFO: trngsrv: POST parameters: %s" % (query_params)
+                data_stream = urllib.urlopen(INSTANTIATION_SERVER_URL, query_params)
+                data = data_stream.read()
+                if DEBUG:
+                    print "* DEBUG: trngsrv: Instantiation server response body: %s" % (data)
+
+                (status, message) = query.Response.parse_server_response(data)
+
+                if status == Storyboard.SERVER_STATUS_SUCCESS:
+
+                    self.lock_active_sessions.acquire()
+                    try:
+                        # Read session info
+                        session_info = sessinfo.SessionInfo()
+                        session_info.parse_YAML_file(ACTIVE_SESSIONS_FILE)
+                        for ac in activity_id_list:
+                            # Remove session and save to file
+                            if not session_info.remove_session_variation(range_id, user_id,ac):
+                                print "* ERROR: Cannot remove training session %s." % (range_id)
+                                self.respond_error(Storyboard.SESSION_INFO_CONSISTENCY_ERROR)
+                                return
+                            else:
+                                session_info.write_YAML_file(ACTIVE_SESSIONS_FILE)
+                    finally:
+                        self.lock_active_sessions.release()
+
+                else:
+                    print "* ERROR: trngsrv: Range destruction error: %s." % (message)
+                    self.respond_error(Storyboard.DESTRUCTION_ERROR)
+                    return
+
+                instsrv_response = data
+
+                if DEBUG:
+                    print "* DEBUG: trngsrv: contsrv response: %s" %(contsrv_response)
+                    print "* DEBUG: trngsrv: instsrv response: %s" %(instsrv_response)
+
+                # Prepare the response: no data needs to be returned,
+                # hence we set the content to None
+                response_data = None
+
+            except IOError as error:
+                print "* ERROR: trngsrv: URL error: %s." % (error)
+                self.respond_error(Storyboard.INSTANTIATION_SERVER_ERROR)
+                return
         ####################################################################
         # End training action
         # Note: Requires synchronized access to active sessions list        
@@ -836,7 +1322,29 @@ def main(argv):
         # Use SSL socket if HTTPS is enabled
         if Storyboard.ENABLE_HTTPS:
             print("* INFO: trngsrv: HTTPS is enabled => set up SSL socket")
-            server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt", ca_certs=None, server_side=True)
+            if os.path.isfile(Storyboard.SSL_keyfile):
+                key = Storyboard.SSL_keyfile
+                print("* INFO: trngsrv: use keyfile => "+key)
+            if os.path.isfile(Storyboard.SSL_certfile):
+                crt = Storyboard.SSL_certfile
+                print("* INFO: trngsrv: use certfile => "+crt)
+            if Storyboard.SSL_ca_certs is not None:
+                if os.path.isfile(Storyboard.SSL_ca_certs):
+                    ca_certs=Storyboard.SSL_ca_certs
+            else:
+                ca_certs = None
+            try:
+                server.socket = ssl.wrap_socket (server.socket, keyfile=key, certfile=crt, ca_certs=ca_certs, server_side=True)
+            except:
+                print("* INFO: trngsrv: can't use keyfile , certfile , ca_certs => try to use default keyfile , certfile")
+                try:
+                    server.socket = ssl.wrap_socket (server.socket, keyfile="cytrone.key", certfile="cytrone.crt", ca_certs=None, server_side=True)
+                except:
+                    print("* INFO: trngsrv: can't set up SSL socket => set up SSL disable")
+                    Storyboard.ENABLE_HTTPS = False
+            finally:
+                print("* INFO: trngsrv: set up for HTTP server done")
+
 
         # Start web server
         print "* INFO: trngsrv: CyTrONE training server listens on %s:%d%s." % (
@@ -853,7 +1361,10 @@ def main(argv):
 
     print "* INFO: trngsrv: CyTrONE training server ended execution."
 
-
+#############################################################################
+# Meta_answer_template
+class Meta_answer_template(Template):
+    idpattern=r'[_a-zA-Z,][_a-zA-Z0-9,]*'
 #############################################################################
 # Run server
 if __name__ == "__main__":

@@ -49,6 +49,10 @@ CYRIS_STATUS_FILENAME = "cr_creation_status"
 CYRIS_NOTIFICATION_TEMPLATE = "range_notification-cr{0}.txt"
 CYRIS_NOTIFICATION_SIMULATED = "range_notification-simulated.txt"
 CYRIS_DETAILS_TEMPLATE = "range_details-cr{0}.yml"
+CYRIS_ENTRY_POINT_TEMPLATE = "entry_points.txt"
+CYRIS_CREATION_STATUS_TEMPLATE = "cr_creation_status"
+CYRIS_INITIF_TEMPLATE = "initif.conf"
+CYRIS_CREATION_LOG_TEMPLATE = "creation.log"
 #CYRIS_DESTRUCTION_SCRIPT = "whole-controlled-destruction.sh"
 CYRIS_DESTRUCTION_SCRIPT = "main/range_cleanup.py"
 CYRIS_CONFIG_FILENAME = "CONFIG"
@@ -82,7 +86,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     # List of valid actions recognized by this server
     VALID_ACTIONS = [query.Parameters.INSTANTIATE_RANGE,
-                     query.Parameters.DESTROY_RANGE]
+                     query.Parameters.DESTROY_RANGE,
+                     query.Parameters.GET_CR_NOTIFICATION,
+                     query.Parameters.GET_CR_DETAILS,
+                     query.Parameters.GET_CR_ENTRY_POINT,
+                     query.Parameters.GET_CR_CREATION_STATUS,
+                     query.Parameters.GET_CR_INITIF,
+                     query.Parameters.GET_CR_CREATION_LOG]
 
     #########################################################################
     # Print log messages with custom format
@@ -352,6 +362,143 @@ class RequestHandler(BaseHTTPRequestHandler):
                     response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
                                                            Storyboard.DESTRUCTION_SIMULATED_ERROR)
 
+        elif action == query.Parameters.GET_CR_NOTIFICATION:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get notification text
+            notification_filename_short = CYRIS_NOTIFICATION_TEMPLATE.format(range_id)
+            notification_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                           CYRIS_RANGE_DIRECTORY,
+                                                           range_id,
+                                                           notification_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: Notification file name=", notification_filename
+            message = None
+            try:
+                with open(notification_filename, 'r') as notification_file:
+                    notification_file_content = notification_file.read()
+                    message = urllib.quote(notification_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS range notification issue")
+
+        elif action == query.Parameters.GET_CR_DETAILS:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get range_details yml
+            range_details_filename_short = CYRIS_DETAILS_TEMPLATE.format(range_id)
+            range_details_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                            CYRIS_RANGE_DIRECTORY,
+                                                            range_id,
+                                                            range_details_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: Notification file name=", range_details_filename
+            message = None
+            try:
+                with open(range_details_filename, 'r') as range_details_file:
+                    range_details_file_content = range_details_file.read()
+                    message = urllib.quote(range_details_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS range_details issue")
+
+        elif action == query.Parameters.GET_CR_ENTRY_POINT:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get entry_points txt
+            entry_points_filename_short = CYRIS_ENTRY_POINT_TEMPLATE.format(range_id)
+            entry_points_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                           CYRIS_RANGE_DIRECTORY,
+                                                           range_id,
+                                                           entry_points_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: Entry_point file name=", entry_points_filename
+            message = None
+            try:
+                with open(entry_points_filename, 'r') as entry_points_file:
+                    entry_points_file_content = entry_points_file.read()
+                    message = urllib.quote(entry_points_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS entry_points issue")
+
+        elif action == query.Parameters.GET_CR_CREATION_STATUS:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get entry_points txt
+            cr_creation_status_filename_short = CYRIS_CREATION_STATUS_TEMPLATE.format(range_id)
+            cr_creation_status_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                                 CYRIS_RANGE_DIRECTORY,
+                                                                 range_id,
+                                                                 cr_creation_status_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: Cr_creation_status file name=", cr_creation_status_filename
+            message = None
+            try:
+                with open(cr_creation_status_filename, 'r') as cr_creation_status_file:
+                    cr_creation_status_file_content = cr_creation_status_file.read()
+                    message = urllib.quote(cr_creation_status_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS cr_creation_status issue")
+
+        elif action == query.Parameters.GET_CR_INITIF:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get entry_points txt
+            initif_filename_short = CYRIS_INITIF_TEMPLATE.format(range_id)
+            initif_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                     CYRIS_RANGE_DIRECTORY,
+                                                     range_id,
+                                                     initif_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: Initif file name=", initif_filename
+            message = None
+            try:
+                with open(initif_filename, 'r') as initif_file:
+                    initif_file_content = initif_file.read()
+                    message = urllib.quote(initif_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS initif issue")
+
+        elif action == query.Parameters.GET_CR_CREATION_LOG:
+            # Check that the range id is valid
+            if not range_id:
+                self.send_error(REQUEST_ERROR, "Invalid range id")
+                return
+            # Get entry_points txt
+            creation_log_filename_short = CYRIS_CREATION_LOG_TEMPLATE.format(range_id)
+            creation_log_filename = "{0}{1}{2}/{3}".format(CYRIS_PATH,
+                                                           CYRIS_RANGE_DIRECTORY,
+                                                           range_id,
+                                                           creation_log_filename_short)
+            if DEBUG:
+                print "* DEBUG: instsrv: CREATION_LOG file name=", creation_log_filename
+            message = None
+            try:
+                with open(creation_log_filename, 'r') as creation_log_file:
+                    creation_log_file_content = creation_log_file.read()
+                    message = urllib.quote(creation_log_file_content)
+                    response_content = self.build_response(Storyboard.SERVER_STATUS_SUCCESS, message)
+            except:
+                response_content = self.build_response(Storyboard.SERVER_STATUS_ERROR,
+                                                       "CyRIS creation_log issue")
         # Catch potential unimplemented actions (if any)
         else:
             print "* WARNING: instsrv: Unknown action: %s." % (action)

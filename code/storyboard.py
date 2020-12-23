@@ -8,6 +8,9 @@ class Storyboard:
     # Global configuration flags
     ENABLE_HTTPS = True
     ENABLE_PASSWORD = True
+    SSL_keyfile = "cytrone.key"
+    SSL_certfile = "cytrone.crt"
+    SSL_ca_certs = None
 
     # Separator constants
     SEPARATOR1 = "-------------------------------------------------------------------------"
