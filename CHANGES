@@ -7,6 +7,8 @@ CyTrONE v1.2
 * Added information in README.md about the installation scripts for
   Ubuntu 16.04 LTS and Ubuntu 18.04 LTS host operating systems that we
   now make available as GitHub gists
+* Improved training creation robustness and error detection
+* Minor bug fixes and improvements
 
 CyTrONE v1.1
 ------------
