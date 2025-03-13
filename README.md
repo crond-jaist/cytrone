@@ -1,3 +1,7 @@
+## Important Notice
+
+### The CROND NEC-endowed chair at JAIST that has originally developed CyTrONE ceased to exist in March 2021, and future development will be carried out by the Cybersecurity Research Lab at JAIST in a [new repository](https://github.com/cyb3rlab/cytrone). The original CyTrONE will not be receiving any future updates, so please switch over to the new version as soon as you are able to do so.
+
 
 # CyTrONE: Integrated Cybersecurity Training Framework
 
